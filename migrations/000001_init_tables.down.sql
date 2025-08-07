@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS ticket_comments;
+DROP TABLE IF EXISTS task_assignments;
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS columns;
+DROP TABLE IF EXISTS labels;
+DROP TABLE IF EXISTS ticket_labels;
+DROP EXTENSION IF EXISTS "pgcrypto";
