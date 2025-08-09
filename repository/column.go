@@ -2,28 +2,19 @@ package repository
 
 import (
 	"github.com/tnqbao/gau-kanban-service/entity"
-	"gorm.io/gorm"
 )
 
-type ColumnRepository struct {
-	db *gorm.DB
-}
-
-func NewColumnRepository(db *gorm.DB) ColumnRepositoryInterface {
-	return &ColumnRepository{db: db}
-}
-
-func (r *ColumnRepository) Create(column *entity.Column) error {
+func (r *Repository) CreateColumn(column *entity.Column) error {
 	return r.db.Create(column).Error
 }
 
-func (r *ColumnRepository) GetAll() ([]entity.Column, error) {
+func (r *Repository) GetAllColumn() ([]entity.Column, error) {
 	var columns []entity.Column
 	err := r.db.Order("position ASC").Find(&columns).Error
 	return columns, err
 }
 
-func (r *ColumnRepository) GetByID(id string) (*entity.Column, error) {
+func (r *Repository) GetColumnByID(id string) (*entity.Column, error) {
 	var column entity.Column
 	err := r.db.Where("id = ?", id).First(&column).Error
 	if err != nil {
@@ -32,19 +23,19 @@ func (r *ColumnRepository) GetByID(id string) (*entity.Column, error) {
 	return &column, nil
 }
 
-func (r *ColumnRepository) Update(column *entity.Column) error {
+func (r *Repository) UpdateColumn(column *entity.Column) error {
 	return r.db.Save(column).Error
 }
 
-func (r *ColumnRepository) Delete(id string) error {
+func (r *Repository) DeleteColumn(id string) error {
 	return r.db.Delete(&entity.Column{}, "id = ?", id).Error
 }
 
-func (r *ColumnRepository) UpdatePosition(id string, position int) error {
+func (r *Repository) UpdateColumnPosition(id string, position int) error {
 	return r.db.Model(&entity.Column{}).Where("id = ?", id).Update("position", position).Error
 }
 
-func (r *ColumnRepository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
+func (r *Repository) GetAllColumnWithTickets() ([]ColumnWithTicketsDTO, error) {
 	var columns []entity.Column
 	var result []ColumnWithTicketsDTO
 
@@ -120,7 +111,7 @@ func (r *ColumnRepository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 	return result, nil
 }
 
-func (r *ColumnRepository) GetAllWithFullTicketDetails() ([]ColumnWithTicketsDTO, error) {
+func (r *Repository) GetAllColumnWithFullTicketDetails() ([]ColumnWithTicketsDTO, error) {
 	var columns []entity.Column
 	var result []ColumnWithTicketsDTO
 

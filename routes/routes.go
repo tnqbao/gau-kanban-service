@@ -2,21 +2,15 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tnqbao/gau-kanban-service/config"
 	"github.com/tnqbao/gau-kanban-service/controller"
-	"github.com/tnqbao/gau-kanban-service/infra"
-	"github.com/tnqbao/gau-kanban-service/repository"
 )
 
-func SetupRouter(config *config.Config) *gin.Engine {
-	inf := infra.InitInfra(config)
-	ctrl := controller.NewController(config, inf)
+func SetupRouter(ctrl *controller.Controller) *gin.Engine {
 
 	// Initialize repository manager
-	repoManager := repository.NewRepositoryManager(inf.Postgres.DB)
 
 	// Initialize kanban controller
-	kanbanCtrl := controller.NewColumnController(repoManager)
+	//kanbanCtrl := controller.NewColumnController(repoManager)
 
 	r := gin.Default()
 
@@ -25,21 +19,32 @@ func SetupRouter(config *config.Config) *gin.Engine {
 		apiRoutes.GET("/", ctrl.CheckHealth)
 
 		// Kanban Board endpoints
-		apiRoutes.GET("/board", kanbanCtrl.GetKanbanBoard)
-		apiRoutes.GET("/tag-colors", kanbanCtrl.GetTagColors)
+		apiRoutes.GET("/board", ctrl.GetKanbanBoard)
+		apiRoutes.GET("/tag-colors", ctrl.GetTagColors)
 
 		// Column management
-		apiRoutes.POST("/columns", kanbanCtrl.CreateColumn)
-		apiRoutes.GET("/columns", kanbanCtrl.GetColumns)
-		apiRoutes.PUT("/columns/:id", kanbanCtrl.UpdateColumn)
-		apiRoutes.DELETE("/columns/:id", kanbanCtrl.DeleteColumn)
-		apiRoutes.PATCH("/columns/:id/position", kanbanCtrl.UpdateColumnPosition)
+		apiRoutes.POST("/columns", ctrl.CreateColumn)
+		apiRoutes.GET("/columns", ctrl.GetColumns)
+		apiRoutes.PUT("/columns/:id", ctrl.UpdateColumn)
+		apiRoutes.DELETE("/columns/:id", ctrl.DeleteColumn)
+		apiRoutes.PATCH("/columns/:id/position", ctrl.UpdateColumnPosition)
 
 		// Ticket management
-		apiRoutes.POST("/tickets", kanbanCtrl.CreateTicket)
-		apiRoutes.PUT("/tickets/:id", kanbanCtrl.UpdateTicket)
-		apiRoutes.DELETE("/tickets/:id", kanbanCtrl.DeleteTicket)
-		apiRoutes.PATCH("/tickets/move", kanbanCtrl.MoveTicketToColumn)
+		apiRoutes.POST("/tickets", ctrl.CreateTicket)
+		apiRoutes.GET("/tickets", ctrl.GetTickets)
+		apiRoutes.GET("/tickets/:id", ctrl.GetTicket)
+		apiRoutes.PUT("/tickets/:id", ctrl.UpdateTicket)
+		apiRoutes.DELETE("/tickets/:id", ctrl.DeleteTicket)
+		apiRoutes.PATCH("/tickets/move", ctrl.MoveTicketToColumn)
+		apiRoutes.PATCH("/tickets/move-with-position", ctrl.MoveTicketWithPosition)
+		apiRoutes.PATCH("/tickets/:id/position", ctrl.UpdateTicketPosition)
+
+		// Assignment management
+		apiRoutes.POST("/assignments", ctrl.CreateAssignment)
+		apiRoutes.PUT("/assignments/:id", ctrl.UpdateAssignment)
+		apiRoutes.DELETE("/assignments/:id", ctrl.DeleteAssignment)
+		apiRoutes.DELETE("/users/:user_id/assignments", ctrl.DeleteAssignmentsByUserID)
+		//apiRoutes.GET("/tickets/:ticket_id/assignments", ctrl.GetTicketAssignments)
 	}
 	return r
 }

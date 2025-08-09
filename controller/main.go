@@ -12,12 +12,7 @@ type Controller struct {
 	Repository *repository.Repository
 }
 
-func NewController(config *config.Config, infra *infra.Infra) *Controller {
-
-	repo := repository.InitRepository(infra)
-	if repo == nil {
-		panic("Failed to initialize Repository")
-	}
+func NewController(config *config.Config, infra *infra.Infra, repo *repository.Repository) *Controller {
 	return &Controller{
 		Config:     config,
 		Infra:      infra,
