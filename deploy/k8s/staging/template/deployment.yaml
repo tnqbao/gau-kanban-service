@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gau-kanban-deployment
+  namespace: bao-${DEPLOY_ENV}-env
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gau-kanban-service
+  template:
+    metadata:
+      labels:
+        app: gau-kanban-service
+    spec:
+      containers:
+        - name: gau-kanban-service
+          image: iamqbao/gau_kanban_service:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: bao-kanban-${DEPLOY_ENV}-config
+            - secretRef:
+                name: bao-kanban-${DEPLOY_ENV}-secret
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "100Mi"
+            limits:
+              cpu: "100m"
+              memory: "500Mi"
+---
