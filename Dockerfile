@@ -13,6 +13,7 @@ WORKDIR /gau_kanban
 RUN apk add --no-cache \
     bash \
     ca-certificates \
+    tzdata \
     curl \
     && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.3/migrate.linux-amd64.tar.gz \
     | tar xvz -C /tmp \
