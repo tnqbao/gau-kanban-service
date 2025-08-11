@@ -79,6 +79,20 @@
             </PendingDiffInfo>
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/migrations/20250808120000_empty_migration.down.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/migrations/20250808120000_empty_migration.down.sql" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/migrations/20250808120000_empty_migration.up.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/migrations/20250808120000_empty_migration.up.sql" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/repository/column_repository.go">
           <value>
             <PendingDiffInfo>

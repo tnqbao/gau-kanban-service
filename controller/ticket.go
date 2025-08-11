@@ -56,7 +56,7 @@ func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
 	})
 }
 
-// CreateTicket tạo ticket mới trong column
+// CreateTicket tạo ticket mới trong column với checklist
 func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	var req CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -64,6 +64,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 		return
 	}
 
+	// Tạo ticket trước
 	ticket := &entity.Ticket{
 		ColumnID:    req.ColumnID,
 		Title:       req.Title,
@@ -77,13 +78,55 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 		return
 	}
 
+	// Tạo checklists nếu có
+	var checklists []ChecklistDTO
+	if req.Checklists != nil && len(req.Checklists) > 0 {
+		for i, checklistReq := range req.Checklists {
+			checklist := &entity.Checklist{
+				TicketID:  ticket.ID,
+				Title:     checklistReq.Title,
+				Completed: false,
+				Position:  i + 1,
+			}
+
+			if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
+				utils.JSON500(c, "Failed to create checklist: "+err.Error())
+				return
+			}
+
+			checklists = append(checklists, ChecklistDTO{
+				ID:        checklist.ID,
+				TicketID:  checklist.TicketID,
+				Title:     checklist.Title,
+				Completed: checklist.Completed,
+				Position:  checklist.Position,
+				CreatedAt: checklist.CreatedAt,
+				UpdatedAt: checklist.UpdatedAt,
+			})
+		}
+	}
+
+	response := TicketWithChecklistsDTO{
+		ID:          ticket.ID,
+		TicketNo:    ticket.TicketNo,
+		ColumnID:    ticket.ColumnID,
+		Title:       ticket.Title,
+		Description: ticket.Description,
+		DueDate:     ticket.DueDate,
+		Priority:    ticket.Priority,
+		Position:    ticket.Position,
+		Checklists:  checklists,
+		CreatedAt:   ticket.CreatedAt,
+		UpdatedAt:   ticket.UpdatedAt,
+	}
+
 	utils.JSON200(c, gin.H{
-		"message": "Ticket created suctrlessfully",
-		"data":    ticket,
+		"message": "Ticket created successfully",
+		"data":    response,
 	})
 }
 
-// UpdateTicket cập nhật thông tin ticket
+// UpdateTicket cập nhật thông tin ticket với checklist
 func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 	id := c.Param("id")
 	var req UpdateTicketRequest
@@ -98,17 +141,18 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 		return
 	}
 
-	if req.Title != "" {
-		ticket.Title = req.Title
+	// Cập nhật thông tin ticket
+	if req.Title != nil {
+		ticket.Title = *req.Title
 	}
-	if req.Description != "" {
-		ticket.Description = req.Description
+	if req.Description != nil {
+		ticket.Description = *req.Description
 	}
-	if req.DueDate != "" {
-		ticket.DueDate = req.DueDate
+	if req.DueDate != nil {
+		ticket.DueDate = *req.DueDate
 	}
-	if req.Priority != "" {
-		ticket.Priority = req.Priority
+	if req.Priority != nil {
+		ticket.Priority = *req.Priority
 	}
 
 	if err := ctrl.Repository.UpdateTicket(ticket); err != nil {
@@ -116,23 +160,99 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 		return
 	}
 
+	// Xử lý checklist nếu có trong request
+	var checklists []ChecklistDTO
+	if req.Checklists != nil {
+		// Xóa tất cả checklist cũ của ticket
+		if err := ctrl.Repository.DeleteChecklistsByTicketID(ticket.ID); err != nil {
+			utils.JSON500(c, "Failed to delete old checklists: "+err.Error())
+			return
+		}
+
+		// Tạo checklist mới
+		for i, checklistReq := range req.Checklists {
+			checklist := &entity.Checklist{
+				TicketID:  ticket.ID,
+				Title:     *checklistReq.Title,
+				Completed: false,
+				Position:  i + 1,
+			}
+
+			if checklistReq.Completed != nil {
+				checklist.Completed = *checklistReq.Completed
+			}
+
+			if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
+				utils.JSON500(c, "Failed to create checklist: "+err.Error())
+				return
+			}
+
+			checklists = append(checklists, ChecklistDTO{
+				ID:        checklist.ID,
+				TicketID:  checklist.TicketID,
+				Title:     checklist.Title,
+				Completed: checklist.Completed,
+				Position:  checklist.Position,
+				CreatedAt: checklist.CreatedAt,
+				UpdatedAt: checklist.UpdatedAt,
+			})
+		}
+	} else {
+		// Nếu không có checklist trong request, lấy checklist hiện tại
+		existingChecklists, err := ctrl.Repository.GetChecklistsByTicketID(ticket.ID)
+		if err == nil {
+			for _, checklist := range existingChecklists {
+				checklists = append(checklists, ChecklistDTO{
+					ID:        checklist.ID,
+					TicketID:  checklist.TicketID,
+					Title:     checklist.Title,
+					Completed: checklist.Completed,
+					Position:  checklist.Position,
+					CreatedAt: checklist.CreatedAt,
+					UpdatedAt: checklist.UpdatedAt,
+				})
+			}
+		}
+	}
+
+	response := TicketWithChecklistsDTO{
+		ID:          ticket.ID,
+		TicketNo:    ticket.TicketNo,
+		ColumnID:    ticket.ColumnID,
+		Title:       ticket.Title,
+		Description: ticket.Description,
+		DueDate:     ticket.DueDate,
+		Priority:    ticket.Priority,
+		Position:    ticket.Position,
+		Checklists:  checklists,
+		CreatedAt:   ticket.CreatedAt,
+		UpdatedAt:   ticket.UpdatedAt,
+	}
+
 	utils.JSON200(c, gin.H{
-		"message": "Ticket updated suctrlessfully",
-		"data":    ticket,
+		"message": "Ticket updated successfully",
+		"data":    response,
 	})
 }
 
-// DeleteTicket xóa ticket
+// DeleteTicket xóa ticket và tất cả checklist liên quan
 func (ctrl *Controller) DeleteTicket(c *gin.Context) {
 	id := c.Param("id")
 
+	// Xóa tất cả checklist của ticket trước
+	if err := ctrl.Repository.DeleteChecklistsByTicketID(id); err != nil {
+		utils.JSON500(c, "Failed to delete checklists: "+err.Error())
+		return
+	}
+
+	// Xóa ticket
 	if err := ctrl.Repository.DeleteTicket(id); err != nil {
 		utils.JSON500(c, err.Error())
 		return
 	}
 
 	utils.JSON200(c, gin.H{
-		"message": "Ticket deleted suctrlessfully",
+		"message": "Ticket and related checklists deleted successfully",
 	})
 }
 
@@ -227,5 +347,55 @@ func (ctrl *Controller) GetTickets(c *gin.Context) {
 
 	utils.JSON200(c, gin.H{
 		"data": ticketsWithAssignees,
+	})
+}
+
+// GetTicketWithChecklists lấy thông tin ticket với checklist và assignees
+func (ctrl *Controller) GetTicketWithChecklists(c *gin.Context) {
+	id := c.Param("id")
+
+	ticket, assignments, err := ctrl.Repository.GetTicketWithAssignments(id)
+	if err != nil {
+		utils.JSON404(c, "Ticket not found")
+		return
+	}
+
+	// Lấy checklists của ticket
+	checklists, err := ctrl.Repository.GetChecklistsByTicketID(id)
+	if err != nil {
+		utils.JSON500(c, "Failed to get checklists: "+err.Error())
+		return
+	}
+
+	var checklistsDTO []ChecklistDTO
+	for _, checklist := range checklists {
+		checklistsDTO = append(checklistsDTO, ChecklistDTO{
+			ID:        checklist.ID,
+			TicketID:  checklist.TicketID,
+			Title:     checklist.Title,
+			Completed: checklist.Completed,
+			Position:  checklist.Position,
+			CreatedAt: checklist.CreatedAt,
+			UpdatedAt: checklist.UpdatedAt,
+		})
+	}
+
+	response := TicketWithChecklistsDTO{
+		ID:          ticket.ID,
+		TicketNo:    ticket.TicketNo,
+		ColumnID:    ticket.ColumnID,
+		Title:       ticket.Title,
+		Description: ticket.Description,
+		DueDate:     ticket.DueDate,
+		Priority:    ticket.Priority,
+		Position:    ticket.Position,
+		Checklists:  checklistsDTO,
+		CreatedAt:   ticket.CreatedAt,
+		UpdatedAt:   ticket.UpdatedAt,
+	}
+
+	utils.JSON200(c, gin.H{
+		"data":      response,
+		"assignees": assignments,
 	})
 }

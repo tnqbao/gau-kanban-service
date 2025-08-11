@@ -33,6 +33,7 @@ func SetupRouter(ctrl *controller.Controller) *gin.Engine {
 		apiRoutes.POST("/tickets", ctrl.CreateTicket)
 		apiRoutes.GET("/tickets", ctrl.GetTickets)
 		apiRoutes.GET("/tickets/:id", ctrl.GetTicket)
+		apiRoutes.GET("/tickets/:id/with-checklists", ctrl.GetTicketWithChecklists)
 		apiRoutes.PUT("/tickets/:id", ctrl.UpdateTicket)
 		apiRoutes.DELETE("/tickets/:id", ctrl.DeleteTicket)
 		apiRoutes.PATCH("/tickets/move", ctrl.MoveTicketToColumn)
@@ -45,6 +46,13 @@ func SetupRouter(ctrl *controller.Controller) *gin.Engine {
 		apiRoutes.DELETE("/assignments/:id", ctrl.DeleteAssignment)
 		apiRoutes.DELETE("/users/:user_id/assignments", ctrl.DeleteAssignmentsByUserID)
 		//apiRoutes.GET("/tickets/:ticket_id/assignments", ctrl.GetTicketAssignments)
+
+		// Checklist management
+		apiRoutes.POST("/checklists", ctrl.CreateChecklist)
+		apiRoutes.GET("/tickets/:ticketId/checklists", ctrl.GetChecklistsByTicketID)
+		apiRoutes.PUT("/checklists/:id", ctrl.UpdateChecklist)
+		apiRoutes.PATCH("/checklists/:id/position", ctrl.UpdateChecklistPosition)
+		apiRoutes.DELETE("/checklists/:id", ctrl.DeleteChecklist)
 	}
 	return r
 }
