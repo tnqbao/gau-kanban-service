@@ -5,54 +5,58 @@ import (
 	"github.com/tnqbao/gau-kanban-service/controller"
 )
 
-func SetupRouter(ctrl *controller.Controller) *gin.Engine {
-
-	// Initialize repository manager
-
-	// Initialize kanban controller
-	//kanbanCtrl := controller.NewColumnController(repoManager)
-
-	r := gin.Default()
-
-	apiRoutes := r.Group("/api/v2/kanban/")
+func SetupRoutes(r *gin.Engine, ctrl *controller.Controller) {
+	api := r.Group("/api")
 	{
-		apiRoutes.GET("/", ctrl.CheckHealth)
+		// Column routes
+		columns := api.Group("/columns")
+		{
+			columns.POST("", ctrl.CreateColumn)
+			columns.GET("", ctrl.GetColumns)
+			columns.PUT("/:id", ctrl.UpdateColumn)
+			columns.DELETE("/:id", ctrl.DeleteColumn)
+			columns.PUT("/:id/position", ctrl.UpdateColumnPosition)
+		}
 
-		// Kanban Board endpoints
-		apiRoutes.GET("/board", ctrl.GetKanbanBoard)
-		apiRoutes.GET("/tag-colors", ctrl.GetTagColors)
+		// Ticket routes
+		tickets := api.Group("/tickets")
+		{
+			tickets.POST("", ctrl.CreateTicket)
+			tickets.GET("", ctrl.GetTickets)
+			tickets.GET("/:id", ctrl.GetTicketByID)
+			tickets.PUT("/:id", ctrl.UpdateTicket)
+			tickets.DELETE("/:id", ctrl.DeleteTicket)
 
-		// Column management
-		apiRoutes.POST("/columns", ctrl.CreateColumn)
-		apiRoutes.GET("/columns", ctrl.GetColumns)
-		apiRoutes.PUT("/columns/:id", ctrl.UpdateColumn)
-		apiRoutes.DELETE("/columns/:id", ctrl.DeleteColumn)
-		apiRoutes.PATCH("/columns/:id/position", ctrl.UpdateColumnPosition)
+			// Position and movement operations
+			tickets.PUT("/:id/position", ctrl.UpdateTicketPosition)
+			tickets.PUT("/move", ctrl.MoveTicketToColumn)
+			tickets.PUT("/move-with-position", ctrl.MoveTicketWithPosition)
+		}
 
-		// Ticket management
-		apiRoutes.POST("/tickets", ctrl.CreateTicket)
-		apiRoutes.GET("/tickets", ctrl.GetTickets)
-		apiRoutes.GET("/tickets/:id", ctrl.GetTicket)
-		apiRoutes.GET("/tickets/:id/with-checklists", ctrl.GetTicketWithChecklists)
-		apiRoutes.PUT("/tickets/:id", ctrl.UpdateTicket)
-		apiRoutes.DELETE("/tickets/:id", ctrl.DeleteTicket)
-		apiRoutes.PATCH("/tickets/move", ctrl.MoveTicketToColumn)
-		apiRoutes.PATCH("/tickets/move-with-position", ctrl.MoveTicketWithPosition)
-		apiRoutes.PATCH("/tickets/:id/position", ctrl.UpdateTicketPosition)
+		// Assignment routes
+		assignments := api.Group("/assignments")
+		{
+			assignments.POST("", ctrl.CreateAssignment)
+			assignments.GET("/ticket/:ticket_id", ctrl.GetTicketAssignments)
+			assignments.PUT("/:id", ctrl.UpdateAssignment)
+			assignments.DELETE("/:id", ctrl.DeleteAssignment)
+			assignments.DELETE("/user/:user_id", ctrl.DeleteAssignmentsByUserID)
+		}
 
-		// Assignment management
-		apiRoutes.POST("/assignments", ctrl.CreateAssignment)
-		apiRoutes.PUT("/assignments/:id", ctrl.UpdateAssignment)
-		apiRoutes.DELETE("/assignments/:id", ctrl.DeleteAssignment)
-		apiRoutes.DELETE("/users/:user_id/assignments", ctrl.DeleteAssignmentsByUserID)
-		//apiRoutes.GET("/tickets/:ticket_id/assignments", ctrl.GetTicketAssignments)
+		// Checklist routes
+		checklists := api.Group("/checklists")
+		{
+			checklists.POST("", ctrl.CreateChecklist)
+			checklists.GET("/ticket/:ticketId", ctrl.GetChecklistsByTicketID)
+			checklists.PUT("/:id", ctrl.UpdateChecklist)
+			checklists.PUT("/:id/position", ctrl.UpdateChecklistPosition)
+			checklists.DELETE("/:id", ctrl.DeleteChecklist)
+		}
 
-		// Checklist management
-		apiRoutes.POST("/checklists", ctrl.CreateChecklist)
-		apiRoutes.GET("/tickets/:ticketId/checklists", ctrl.GetChecklistsByTicketID)
-		apiRoutes.PUT("/checklists/:id", ctrl.UpdateChecklist)
-		apiRoutes.PATCH("/checklists/:id/position", ctrl.UpdateChecklistPosition)
-		apiRoutes.DELETE("/checklists/:id", ctrl.DeleteChecklist)
+		// Kanban board view routes
+		kanban := api.Group("/kanban")
+		{
+			kanban.GET("/board", ctrl.GetKanbanBoard)
+		}
 	}
-	return r
 }

@@ -1,9 +1,8 @@
 package controller
 
 import (
-	"gau-kanban-service/entity"
-	"gau-kanban-service/utils"
-	"net/http"
+	"github.com/tnqbao/gau-kanban-service/entity"
+	"github.com/tnqbao/gau-kanban-service/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,14 +12,14 @@ import (
 func (ctrl *Controller) CreateChecklist(ctx *gin.Context) {
 	var req CreateChecklistRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		utils.JSON400(ctx, "Invalid request body")
 		return
 	}
 
 	// Lấy vị trí tiếp theo cho checklist trong ticket
 	maxPosition, err := ctrl.Repository.GetMaxChecklistPosition(req.TicketID)
 	if err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to get max position", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
@@ -34,7 +33,7 @@ func (ctrl *Controller) CreateChecklist(ctx *gin.Context) {
 	}
 
 	if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to create checklist", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
@@ -48,20 +47,23 @@ func (ctrl *Controller) CreateChecklist(ctx *gin.Context) {
 		UpdatedAt: checklist.UpdatedAt,
 	}
 
-	utils.SendSuccessResponse(ctx, http.StatusCreated, "Checklist created successfully", response)
+	utils.JSON200(ctx, gin.H{
+		"message": "Checklist created successfully",
+		"data":    response,
+	})
 }
 
 // GetChecklistsByTicketID lấy tất cả checklist của một ticket
 func (ctrl *Controller) GetChecklistsByTicketID(ctx *gin.Context) {
 	ticketID := ctx.Param("ticketId")
 	if ticketID == "" {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Ticket ID is required", "")
+		utils.JSON400(ctx, "Ticket ID is required")
 		return
 	}
 
 	checklists, err := ctrl.Repository.GetChecklistsByTicketID(ticketID)
 	if err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to get checklists", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
@@ -78,26 +80,29 @@ func (ctrl *Controller) GetChecklistsByTicketID(ctx *gin.Context) {
 		})
 	}
 
-	utils.SendSuccessResponse(ctx, http.StatusOK, "Checklists retrieved successfully", response)
+	utils.JSON200(ctx, gin.H{
+		"message": "Checklists retrieved successfully",
+		"data":    response,
+	})
 }
 
 // UpdateChecklist cập nhật checklist
 func (ctrl *Controller) UpdateChecklist(ctx *gin.Context) {
 	checklistID := ctx.Param("id")
 	if checklistID == "" {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Checklist ID is required", "")
+		utils.JSON400(ctx, "Checklist ID is required")
 		return
 	}
 
 	var req UpdateChecklistRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		utils.JSON400(ctx, "Invalid request body")
 		return
 	}
 
 	checklist, err := ctrl.Repository.GetChecklistByID(checklistID)
 	if err != nil {
-		utils.SendErrorResponse(ctx, http.StatusNotFound, "Checklist not found", err.Error())
+		utils.JSON404(ctx, "Checklist not found")
 		return
 	}
 
@@ -115,7 +120,7 @@ func (ctrl *Controller) UpdateChecklist(ctx *gin.Context) {
 	checklist.UpdatedAt = time.Now().Format(time.RFC3339)
 
 	if err := ctrl.Repository.UpdateChecklist(checklist); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to update checklist", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
@@ -129,43 +134,50 @@ func (ctrl *Controller) UpdateChecklist(ctx *gin.Context) {
 		UpdatedAt: checklist.UpdatedAt,
 	}
 
-	utils.SendSuccessResponse(ctx, http.StatusOK, "Checklist updated successfully", response)
+	utils.JSON200(ctx, gin.H{
+		"message": "Checklist updated successfully",
+		"data":    response,
+	})
 }
 
 // UpdateChecklistPosition cập nhật vị trí checklist
 func (ctrl *Controller) UpdateChecklistPosition(ctx *gin.Context) {
 	checklistID := ctx.Param("id")
 	if checklistID == "" {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Checklist ID is required", "")
+		utils.JSON400(ctx, "Checklist ID is required")
 		return
 	}
 
 	var req UpdateChecklistPositionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		utils.JSON400(ctx, "Invalid request body")
 		return
 	}
 
 	if err := ctrl.Repository.UpdateChecklistPosition(checklistID, req.Position); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to update checklist position", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, http.StatusOK, "Checklist position updated successfully", nil)
+	utils.JSON200(ctx, gin.H{
+		"message": "Checklist position updated successfully",
+	})
 }
 
 // DeleteChecklist xóa checklist
 func (ctrl *Controller) DeleteChecklist(ctx *gin.Context) {
 	checklistID := ctx.Param("id")
 	if checklistID == "" {
-		utils.SendErrorResponse(ctx, http.StatusBadRequest, "Checklist ID is required", "")
+		utils.JSON400(ctx, "Checklist ID is required")
 		return
 	}
 
 	if err := ctrl.Repository.DeleteChecklist(checklistID); err != nil {
-		utils.SendErrorResponse(ctx, http.StatusInternalServerError, "Failed to delete checklist", err.Error())
+		utils.JSON500(ctx, err.Error())
 		return
 	}
 
-	utils.SendSuccessResponse(ctx, http.StatusOK, "Checklist deleted successfully", nil)
+	utils.JSON200(ctx, gin.H{
+		"message": "Checklist deleted successfully",
+	})
 }

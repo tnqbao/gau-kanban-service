@@ -8,7 +8,7 @@ func (r *Repository) CreateAssignment(assignment *entity.TaskAssignment) error {
 	return r.db.Create(assignment).Error
 }
 
-func (r *Repository) GetAllAssignment() ([]entity.TaskAssignment, error) {
+func (r *Repository) GetAllAssignments() ([]entity.TaskAssignment, error) {
 	var assignments []entity.TaskAssignment
 	err := r.db.Order("assigned_at DESC").Find(&assignments).Error
 	return assignments, err
@@ -47,10 +47,14 @@ func (r *Repository) DeleteAssignment(id string) error {
 	return r.db.Delete(&entity.TaskAssignment{}, "id = ?", id).Error
 }
 
-func (r *Repository) DeleteAssignmentByTicketAndUser(ticketID, userID string) error {
-	return r.db.Where("ticket_id = ? AND user_id = ?", ticketID, userID).Delete(&entity.TaskAssignment{}).Error
+func (r *Repository) DeleteAssignmentsByTicketID(ticketID string) error {
+	return r.db.Where("ticket_id = ?", ticketID).Delete(&entity.TaskAssignment{}).Error
 }
 
 func (r *Repository) DeleteAssignmentsByUserID(userID string) error {
 	return r.db.Where("user_id = ?", userID).Delete(&entity.TaskAssignment{}).Error
+}
+
+func (r *Repository) DeleteAssignmentByTicketAndUser(ticketID, userID string) error {
+	return r.db.Where("ticket_id = ? AND user_id = ?", ticketID, userID).Delete(&entity.TaskAssignment{}).Error
 }
