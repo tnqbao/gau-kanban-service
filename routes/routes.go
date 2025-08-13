@@ -5,7 +5,8 @@ import (
 	"github.com/tnqbao/gau-kanban-service/controller"
 )
 
-func SetupRoutes(r *gin.Engine, ctrl *controller.Controller) {
+func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
+	r := gin.Default()
 	api := r.Group("/api")
 	{
 		// Column routes
@@ -59,4 +60,5 @@ func SetupRoutes(r *gin.Engine, ctrl *controller.Controller) {
 			kanban.GET("/board", ctrl.GetKanbanBoard)
 		}
 	}
+	return r
 }
