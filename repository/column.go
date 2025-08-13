@@ -49,7 +49,7 @@ func (r *Repository) GetAllColumnWithTickets() ([]ColumnWithTicketsDTO, error) {
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
 			ID:      column.ID,
-			Title:   column.Name,
+			Title:   column.Title,
 			Order:   column.Position,
 			Tickets: []TicketDTO{},
 		}
@@ -85,7 +85,7 @@ func (r *Repository) GetAllColumnWithTickets() ([]ColumnWithTicketsDTO, error) {
 			}
 
 			// Xác định completed dựa trên column name
-			completed := column.Name == "DONE" || column.Name == "COMPLETED"
+			completed := column.Title == "DONE" || column.Title == "COMPLETED"
 
 			ticketDTO := TicketDTO{
 				ID:          ticket.ID,
@@ -125,7 +125,7 @@ func (r *Repository) GetAllColumnWithFullTicketDetails() ([]ColumnWithTicketsDTO
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
 			ID:      column.ID,
-			Title:   column.Name,
+			Title:   column.Title,
 			Order:   column.Position,
 			Tickets: []TicketDTO{},
 		}
@@ -172,7 +172,7 @@ func (r *Repository) GetAllColumnWithFullTicketDetails() ([]ColumnWithTicketsDTO
 			}
 
 			// Xác định completed
-			completed := column.Name == "DONE" || column.Name == "COMPLETED"
+			completed := column.Title == "DONE" || column.Title == "COMPLETED"
 
 			ticketDTO := TicketDTO{
 				ID:          ticket.ID,
