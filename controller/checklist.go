@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"time"
+
 	"github.com/tnqbao/gau-kanban-service/entity"
 	"github.com/tnqbao/gau-kanban-service/utils"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )

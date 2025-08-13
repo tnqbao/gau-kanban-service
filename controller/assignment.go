@@ -8,7 +8,7 @@ import (
 
 // CreateAssignment tạo assignment mới cho ticket
 func (ctrl *Controller) CreateAssignment(c *gin.Context) {
-	var req
+	var req CreateAssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
@@ -41,7 +41,7 @@ func (ctrl *Controller) CreateAssignment(c *gin.Context) {
 // UpdateAssignment cập nhật thông tin assignment
 func (ctrl *Controller) UpdateAssignment(c *gin.Context) {
 	id := c.Param("id")
-	var req
+	var req UpdateAssignmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
@@ -53,7 +53,7 @@ func (ctrl *Controller) UpdateAssignment(c *gin.Context) {
 		return
 	}
 
-	if req. != "" {
+	if req.UserFullName != "" {
 		assignment.UserFullName = req.UserFullName
 	}
 

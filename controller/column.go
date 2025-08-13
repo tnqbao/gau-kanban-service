@@ -15,7 +15,7 @@ func (ctrl *Controller) CreateColumn(c *gin.Context) {
 	}
 
 	column := &entity.Column{
-		Name:     req.Name,
+		Title:    req.Title,
 		Position: req.Position,
 	}
 
@@ -45,8 +45,8 @@ func (ctrl *Controller) UpdateColumn(c *gin.Context) {
 		return
 	}
 
-	if req.Name != "" {
-		column.Name = req.Name
+	if req.Title != "" {
+		column.Title = req.Title
 	}
 	if req.Position != nil {
 		column.Position = *req.Position

@@ -1,5 +1,48 @@
 package controller
 
+type KanbanColumnResponse struct {
+	ID      string                 `json:"id"`
+	Title   string                 `json:"title"`
+	Order   int                    `json:"order"`
+	Tickets []KanbanTicketResponse `json:"tickets"`
+}
+
+type KanbanTicketResponse struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	TicketNo    string   `json:"ticketNo"`
+	Labels      []string `json:"Label"`
+	Assignees   []string `json:"assignees"`
+	Completed   bool     `json:"completed"`
+	DueDate     string   `json:"due_date,omitempty"`
+	Priority    string   `json:"priority,omitempty"`
+}
+
+type CreateColumnRequest struct {
+	Title    string `json:"title" binding:"required"`
+	Position int    `json:"position"`
+}
+
+type UpdateColumnRequest struct {
+	Title    string `json:"title"`
+	Position *int   `json:"position"`
+}
+
+type UpdateColumnPositionRequest struct {
+	Position int `json:"position" binding:"required"`
+}
+
+type CreateAssignmentRequest struct {
+	TicketID     string `json:"ticket_id" binding:"required"`
+	UserID       string `json:"user_id" binding:"required"`
+	UserFullName string `json:"user_full_name" binding:"required"`
+}
+
+type UpdateAssignmentRequest struct {
+	UserFullName string `json:"user_full_name"`
+}
+
 // Ticket DTOs
 type CreateTicketRequest struct {
 	ColumnID    string                     `json:"column_id" binding:"required"`
