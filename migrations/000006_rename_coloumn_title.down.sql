@@ -1,1 +1,0 @@
-ALTER TABLE checklists RENAME COLUMN title TO name;
