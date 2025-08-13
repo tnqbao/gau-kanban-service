@@ -100,6 +100,10 @@ func (ctrl *Controller) GetTicketAssignments(c *gin.Context) {
 // DeleteAssignmentsByUserID xóa tất cả assignments của một user
 func (ctrl *Controller) DeleteAssignmentsByUserID(c *gin.Context) {
 	userID := c.Param("user_id")
+	if userID == "" {
+		utils.JSON400(c, "User ID is required")
+		return
+	}
 
 	if err := ctrl.Repository.DeleteAssignmentsByUserID(userID); err != nil {
 		utils.JSON500(c, err.Error())

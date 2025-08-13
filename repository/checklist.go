@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"gau-kanban-service/entity"
+	"github.com/tnqbao/gau-kanban-service/entity"
 )
 
 // Checklist methods

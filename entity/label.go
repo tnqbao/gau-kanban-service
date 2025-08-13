@@ -1,13 +1,5 @@
 package entity
 
-//CREATE TABLE IF NOT EXISTS labels (
-//id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-//name TEXT NOT NULL,
-//color TEXT NOT NULL,
-//created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-//updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-//);
-
 type Label struct {
 	ID        string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	Name      string `gorm:"type:text;not null" json:"name"`

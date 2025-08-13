@@ -30,12 +30,17 @@ func (ctrl *Controller) GetKanbanBoard(c *gin.Context) {
 				assignees[k] = assignee.UserID
 			}
 
+			labels := make([]string, len(ticket.Labels))
+			for k, label := range ticket.Labels {
+				labels[k] = label.Name
+			}
+
 			tickets[j] = KanbanTicketResponse{
 				ID:          ticket.ID,
 				Title:       ticket.Title,
 				Description: ticket.Description,
 				TicketNo:    ticket.TicketID,
-				Tags:        tags,
+				Labels:      labels,
 				Assignees:   assignees,
 				Completed:   ticket.Completed,
 				DueDate:     ticket.DueDate,
