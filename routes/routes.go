@@ -7,7 +7,7 @@ import (
 
 func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 	r := gin.Default()
-	api := r.Group("/api")
+	api := r.Group("/api/v2/kanban")
 	{
 		// Column routes
 		columns := api.Group("/columns")
