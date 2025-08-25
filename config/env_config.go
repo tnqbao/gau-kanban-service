@@ -12,6 +12,11 @@ type EnvConfig struct {
 		Password string
 		Port     string
 	}
+
+	CORS struct {
+		AllowDomains string
+		GlobalDomain string
+	}
 }
 
 func LoadEnvConfig() *EnvConfig {
@@ -34,8 +39,8 @@ func LoadEnvConfig() *EnvConfig {
 	//	config.JWT.Expire = 3600 * 24 * 7
 	//}
 	//
-	//config.CORS.AllowDomains = os.Getenv("ALLOWED_DOMAINS")
-	//config.CORS.GlobalDomain = os.Getenv("GLOBAL_DOMAIN")
+	config.CORS.AllowDomains = os.Getenv("ALLOWED_DOMAINS")
+	config.CORS.GlobalDomain = os.Getenv("GLOBAL_DOMAIN")
 
 	//config.Redis.Address = os.Getenv("REDIS_ADDRESS")
 	//config.Redis.Password = os.Getenv("REDIS_PASSWORD")

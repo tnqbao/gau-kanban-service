@@ -3,12 +3,18 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/tnqbao/gau-kanban-service/controller"
+	"github.com/tnqbao/gau-kanban-service/middlewares"
 )
 
 func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 	r := gin.Default()
+	middleware, err := middlewares.NewMiddlewares(ctrl)
+	if err != nil {
+		panic("Failed to initialize middlewares: " + err.Error())
+	}
 	api := r.Group("/api/v2/kanban")
 	{
+		api.Use(middleware.CORSMiddleware)
 		// Column routes
 		columns := api.Group("/columns")
 		{
