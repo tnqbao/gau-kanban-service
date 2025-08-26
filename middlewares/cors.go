@@ -37,6 +37,7 @@ func CORSMiddleware(config *config.EnvConfig) gin.HandlerFunc {
 		AllowOrigins:     domainList,
 		AllowMethods:     corsConfig.AllowMethods,
 		AllowHeaders:     corsConfig.AllowHeaders,
+		AllowAllOrigins:  true,
 		ExposeHeaders:    corsConfig.ExposeHeaders,
 		AllowCredentials: corsConfig.AllowCredentials,
 		MaxAge:           time.Duration(corsConfig.MaxAge) * time.Second,
