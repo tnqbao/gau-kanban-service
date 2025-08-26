@@ -43,15 +43,6 @@
             </PendingDiffInfo>
           </value>
         </entry>
-        <entry key="$PROJECT_DIR$/repository/main.go">
-          <value>
-            <PendingDiffInfo>
-              <option name="filePath" value="$PROJECT_DIR$/repository/main.go" />
-              <option name="originalContent" value="package repository&#10;&#10;import (&#10;&#9;&quot;github.com/tnqbao/gau-kanban-service/infra&quot;&#10;&#9;&quot;gorm.io/gorm&quot;&#10;)&#10;&#10;type Repository struct {&#10;&#9;db            *gorm.DB&#10;&#9;ChecklistRepo *ChecklistRepository&#10;&#9;//cacheDb        *redis.Client&#10;}&#10;&#10;var repository *Repository&#10;&#10;func InitRepository(infra *infra.Infra) *Repository {&#10;&#9;repository = &amp;Repository{&#10;&#9;&#9;db:            infra.Postgres.DB,&#10;&#9;&#9;ChecklistRepo: NewChecklistRepository(infra.Postgres.DB),&#10;&#9;&#9;//cacheDb: infra.Redis.Client,&#10;&#9;}&#10;&#9;if repository.db == nil {&#10;&#9;&#9;panic(&quot;database connection is nil&quot;)&#10;&#9;}&#10;&#9;return repository&#10;}&#10;&#10;func GetRepository() *Repository {&#10;&#9;if repository == nil {&#10;&#9;&#9;panic(&quot;repository not initialized&quot;)&#10;&#9;}&#10;&#9;return repository&#10;}&#10;" />
-              <option name="updatedContent" value="package repository&#10;&#10;import (&#10;&#9;&quot;github.com/tnqbao/gau-kanban-service/infra&quot;&#10;&#9;&quot;gorm.io/gorm&quot;&#10;)&#10;&#10;type Repository struct {&#10;&#9;db *gorm.DB&#10;&#9;//cacheDb *redis.Client&#10;}&#10;&#10;var repository *Repository&#10;&#10;func InitRepository(infra *infra.Infra) *Repository {&#10;&#9;repository = &amp;Repository{&#10;&#9;&#9;db: infra.Postgres.DB,&#10;&#9;&#9;//cacheDb: infra.Redis.Client,&#10;&#9;}&#10;&#9;if repository.db == nil {&#10;&#9;&#9;panic(&quot;database connection is nil&quot;)&#10;&#9;}&#10;&#9;return repository&#10;}&#10;&#10;func GetRepository() *Repository {&#10;&#9;if repository == nil {&#10;&#9;&#9;panic(&quot;repository not initialized&quot;)&#10;&#9;}&#10;&#9;return repository&#10;}" />
-            </PendingDiffInfo>
-          </value>
-        </entry>
       </map>
     </option>
   </component>
