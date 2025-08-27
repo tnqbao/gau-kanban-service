@@ -63,9 +63,9 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 		}
 
 		// Kanban board view routes
-		kanban := api.Group("/kanban")
+		kanban := api.Group("/board")
 		{
-			kanban.GET("/board", ctrl.GetKanbanBoard)
+			kanban.GET("", ctrl.GetKanbanBoard)
 		}
 	}
 	return r
