@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS columns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0,
+    position SERIAL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -76,4 +76,3 @@ CREATE INDEX IF NOT EXISTS idx_checklists_position ON checklists(ticket_id, posi
 
 -- Sequence for ticket_no (if needed in app logic)
 CREATE SEQUENCE IF NOT EXISTS ticket_number_seq START 1;
-

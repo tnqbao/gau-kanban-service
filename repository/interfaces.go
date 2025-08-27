@@ -9,11 +9,13 @@ type ColumnRepositoryInterface interface {
 	Create(column *entity.Column) error
 	GetAll() ([]entity.Column, error)
 	GetByID(id string) (*entity.Column, error)
+	GetColumnById(id string) (*ColumnWithTicketsDTO, error)
 	Update(column *entity.Column) error
 	Delete(id string) error
 	UpdatePosition(id string, position int) error
 	GetAllWithTickets() ([]ColumnWithTicketsDTO, error)
 	GetAllWithFullTicketDetails() ([]ColumnWithTicketsDTO, error)
+	GetMaxColumnPosition() (int, error)
 }
 
 // TicketRepositoryInterface defines methods for ticket operations

@@ -3,7 +3,7 @@ package entity
 type Column struct {
 	ID        string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
 	Title     string `gorm:"type:text;not null" json:"title"`
-	Position  int    `gorm:"type:integer;not null;default:0" json:"position"`
+	Position  int    `gorm:"type:integer;autoIncrement" json:"position"`
 	CreatedAt string `gorm:"type:timestamp with time zone;default:now()" json:"created_at"`
 	UpdatedAt string `gorm:"type:timestamp with time zone;default:now()" json:"updated_at"`
 }
