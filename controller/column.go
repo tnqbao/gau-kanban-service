@@ -150,6 +150,62 @@ func (ctrl *Controller) DeleteColumn(c *gin.Context) {
 	})
 }
 
+// GetColumnsByBoardId lấy tất cả columns của một board theo board ID
+func (ctrl *Controller) GetColumnsByBoardId(c *gin.Context) {
+	ctx := c.Request.Context()
+	boardID := c.Param("boardId")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID] Get columns by board ID request received for board: %s", boardID)
+
+	// Validate that the board exists
+	_, err := ctrl.Repository.GetBoardByID(boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Columns By Board ID] Board not found: %s", boardID)
+		utils.JSON404(c, "Board not found")
+		return
+	}
+
+	columns, err := ctrl.Repository.GetColumnsByBoardId(boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Columns By Board ID] Failed to get columns for board: %s", boardID)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID] Successfully retrieved %d columns for board: %s", len(columns), boardID)
+	utils.JSON200(c, gin.H{
+		"message": "Columns retrieved successfully",
+		"data":    columns,
+	})
+}
+
+// GetColumnsByBoardIdWithTickets lấy tất cả columns của một board với tickets
+func (ctrl *Controller) GetColumnsByBoardIdWithTickets(c *gin.Context) {
+	ctx := c.Request.Context()
+	boardID := c.Param("boardId")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID With Tickets] Get columns with tickets by board ID request received for board: %s", boardID)
+
+	// Validate that the board exists
+	_, err := ctrl.Repository.GetBoardByID(boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Columns By Board ID With Tickets] Board not found: %s", boardID)
+		utils.JSON404(c, "Board not found")
+		return
+	}
+
+	columns, err := ctrl.Repository.GetColumnsByBoardIdWithTickets(boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Columns By Board ID With Tickets] Failed to get columns with tickets for board: %s", boardID)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID With Tickets] Successfully retrieved %d columns with tickets for board: %s", len(columns), boardID)
+	utils.JSON200(c, gin.H{
+		"message": "Columns with tickets retrieved successfully",
+		"data":    columns,
+	})
+}
+
 // ChangeColumnPosition thay đổi vị trí column với xử lý nâng cao
 func (ctrl *Controller) ChangeColumnPosition(c *gin.Context) {
 	ctx := c.Request.Context()

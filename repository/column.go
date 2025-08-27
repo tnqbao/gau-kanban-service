@@ -185,6 +185,90 @@ func (r *Repository) GetMaxColumnPosition() (int, error) {
 	return maxPosition, err
 }
 
+// GetColumnsByBoardId lấy tất cả columns của một board theo board ID
+func (r *Repository) GetColumnsByBoardId(boardID string) ([]entity.Column, error) {
+	var columns []entity.Column
+	err := r.db.Where("board_id = ?", boardID).Order("position ASC").Find(&columns).Error
+	return columns, err
+}
+
+// GetColumnsByBoardIdWithTickets lấy tất cả columns của một board với tickets
+func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWithTicketsDTO, error) {
+	var columns []entity.Column
+	var result []ColumnWithTicketsDTO
+
+	// Lấy tất cả columns của board theo thứ tự position
+	err := r.db.Where("board_id = ?", boardID).Order("position ASC").Find(&columns).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Duyệt qua từng column và lấy tickets của nó
+	for _, column := range columns {
+		columnDTO := ColumnWithTicketsDTO{
+			ID:       column.ID,
+			Title:    column.Title,
+			Position: column.Position,
+			Tickets:  []TicketDTO{},
+		}
+
+		// Lấy tickets của column này
+		var tickets []entity.Ticket
+		err := r.db.Where("column_id = ?", column.ID).Order("position ASC, created_at ASC").Find(&tickets).Error
+		if err != nil {
+			continue // Skip this column if error
+		}
+
+		// Convert tickets thành TicketDTO với thông tin cơ bản
+		for _, ticket := range tickets {
+			// Lấy labels chi tiết
+			var labels []LabelDTO
+			err := r.db.Table("labels").
+				Select("labels.id, labels.name, labels.color").
+				Joins("JOIN ticket_labels ON labels.id = ticket_labels.label_id").
+				Where("ticket_labels.ticket_id = ?", ticket.ID).
+				Scan(&labels).Error
+			if err != nil {
+				labels = []LabelDTO{}
+			}
+
+			// Lấy assignees chi tiết
+			var assignees []AssigneeDTO
+			err = r.db.Table("task_assignments").
+				Select("task_assignments.id, task_assignments.user_id, task_assignments.user_full_name as user_full_name, task_assignments.assigned_at").
+				Where("ticket_id = ?", ticket.ID).
+				Scan(&assignees).Error
+			if err != nil {
+				assignees = []AssigneeDTO{}
+			}
+
+			// Xác định completed
+			completed := column.Title == "DONE" || column.Title == "COMPLETED"
+
+			ticketDTO := TicketDTO{
+				ID:          ticket.ID,
+				Title:       ticket.Title,
+				Description: ticket.Description,
+				TicketID:    ticket.ID,
+				Labels:      labels,
+				Assignees:   assignees,
+				Comments:    []CommentDTO{}, // Comments rỗng cho performance
+				Completed:   completed,
+				DueDate:     ticket.DueDate,
+				Priority:    ticket.Priority,
+				CreatedAt:   ticket.CreatedAt,
+				UpdatedAt:   ticket.UpdatedAt,
+			}
+
+			columnDTO.Tickets = append(columnDTO.Tickets, ticketDTO)
+		}
+
+		result = append(result, columnDTO)
+	}
+
+	return result, nil
+}
+
 // ChangeColumnPosition changes column position with advanced handling
 func (r *Repository) ChangeColumnPosition(columnID string, newPosition int) error {
 	// Get current column info

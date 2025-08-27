@@ -28,6 +28,10 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			boards.DELETE("/:id", ctrl.DeleteBoard)
 			boards.PUT("/:id/archive", ctrl.ArchiveBoard)
 			boards.PUT("/:id/restore", ctrl.RestoreBoard)
+
+			// Board-specific column routes
+			boards.GET("/:boardId/columns", ctrl.GetColumnsByBoardId)
+			boards.GET("/:boardId/columns/with-tickets", ctrl.GetColumnsByBoardIdWithTickets)
 		}
 
 		// Member routes
