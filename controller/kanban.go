@@ -57,6 +57,8 @@ func (ctrl *Controller) GetKanbanBoard(c *gin.Context) {
 	}
 
 	utils.JSON200(c, gin.H{
-		"data": kanbanColumns,
+		"data": gin.H{
+			"columns": kanbanColumns,
+		},
 	})
 }
