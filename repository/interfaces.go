@@ -55,6 +55,8 @@ type TicketRepositoryInterface interface {
 	GetMaxTicketPositionInColumn(columnID string) (int, error)
 	GenerateTicketNumber() (string, error)
 	GetTicketWithDetails(ticketID string) (*TicketWithDetailsResponse, error)
+	SearchTickets(query string, boardID string) ([]entity.Ticket, error)
+	FilterTickets(labelID, assigneeID, status, boardID string) ([]entity.Ticket, error)
 }
 
 // TaskAssignmentRepositoryInterface defines methods for task assignment operations

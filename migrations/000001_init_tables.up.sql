@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS boards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     title TEXT NOT NULL,
     description TEXT,
+    archived BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS columns (
     board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     position SERIAL,
+    wip_limit INTEGER DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );

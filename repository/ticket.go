@@ -329,3 +329,56 @@ func (r *Repository) ChangeTicketPosition(ticketID string, newColumnID string, n
 
 	return tx.Commit().Error
 }
+
+// SearchTickets performs fuzzy search on tickets by title and ticket number
+func (r *Repository) SearchTickets(query string, boardID string) ([]entity.Ticket, error) {
+	var tickets []entity.Ticket
+
+	// Build the search query
+	searchQuery := r.db.Where("title ILIKE ? OR ticket_no ILIKE ?", "%"+query+"%", "%"+query+"%")
+
+	// Add board filter if provided
+	if boardID != "" {
+		searchQuery = searchQuery.Joins("JOIN columns ON tickets.column_id = columns.id").
+			Where("columns.board_id = ?", boardID)
+	}
+
+	err := searchQuery.Order("created_at DESC").Find(&tickets).Error
+	return tickets, err
+}
+
+// FilterTickets filters tickets by label, assignee, and status
+func (r *Repository) FilterTickets(labelID, assigneeID, status, boardID string) ([]entity.Ticket, error) {
+	var tickets []entity.Ticket
+
+	query := r.db.Table("tickets")
+
+	// Join with columns for board filtering
+	if boardID != "" {
+		query = query.Joins("JOIN columns ON tickets.column_id = columns.id").
+			Where("columns.board_id = ?", boardID)
+	}
+
+	// Filter by label
+	if labelID != "" {
+		query = query.Joins("JOIN ticket_labels ON tickets.id = ticket_labels.ticket_id").
+			Where("ticket_labels.label_id = ?", labelID)
+	}
+
+	// Filter by assignee
+	if assigneeID != "" {
+		query = query.Joins("JOIN task_assignments ON tickets.id = task_assignments.ticket_id").
+			Where("task_assignments.user_id = ?", assigneeID)
+	}
+
+	// Filter by status (column title)
+	if status != "" {
+		if boardID == "" {
+			query = query.Joins("JOIN columns ON tickets.column_id = columns.id")
+		}
+		query = query.Where("LOWER(columns.title) = LOWER(?)", status)
+	}
+
+	err := query.Order("tickets.created_at DESC").Find(&tickets).Error
+	return tickets, err
+}

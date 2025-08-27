@@ -147,3 +147,61 @@ func (ctrl *Controller) DeleteBoard(c *gin.Context) {
 		"message": "Board deleted successfully",
 	})
 }
+
+// ArchiveBoard archives a board (soft delete)
+func (ctrl *Controller) ArchiveBoard(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Archive Board] Archive board request received for ID: %s", id)
+
+	board, err := ctrl.Repository.GetBoardByID(id)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Archive Board] Board not found: %s", id)
+		utils.JSON404(c, "Board not found")
+		return
+	}
+
+	board.Archived = true
+	board.UpdatedAt = time.Now().Format(time.RFC3339)
+
+	if err := ctrl.Repository.UpdateBoard(board); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Archive Board] Failed to archive board: %s", id)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Archive Board] Board archived successfully: %s", id)
+	utils.JSON200(c, gin.H{
+		"message": "Board archived successfully",
+		"data":    board,
+	})
+}
+
+// RestoreBoard restores an archived board
+func (ctrl *Controller) RestoreBoard(c *gin.Context) {
+	ctx := c.Request.Context()
+	id := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Restore Board] Restore board request received for ID: %s", id)
+
+	board, err := ctrl.Repository.GetBoardByID(id)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Restore Board] Board not found: %s", id)
+		utils.JSON404(c, "Board not found")
+		return
+	}
+
+	board.Archived = false
+	board.UpdatedAt = time.Now().Format(time.RFC3339)
+
+	if err := ctrl.Repository.UpdateBoard(board); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Restore Board] Failed to restore board: %s", id)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Restore Board] Board restored successfully: %s", id)
+	utils.JSON200(c, gin.H{
+		"message": "Board restored successfully",
+		"data":    board,
+	})
+}

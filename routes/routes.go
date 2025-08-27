@@ -25,6 +25,8 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			boards.GET("/:id", ctrl.GetBoardByID)
 			boards.PUT("/:id", ctrl.UpdateBoard)
 			boards.DELETE("/:id", ctrl.DeleteBoard)
+			boards.PUT("/:id/archive", ctrl.ArchiveBoard)
+			boards.PUT("/:id/restore", ctrl.RestoreBoard)
 		}
 
 		// Member routes
@@ -53,6 +55,8 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 		{
 			tickets.POST("", ctrl.CreateTicket)
 			tickets.GET("", ctrl.GetTickets)
+			tickets.GET("/search", ctrl.SearchTickets)
+			tickets.GET("/filter", ctrl.FilterTickets)
 			tickets.GET("/:id", ctrl.GetTicketByID)
 			tickets.PUT("/:id", ctrl.UpdateTicket)
 			tickets.DELETE("/:id", ctrl.DeleteTicket)

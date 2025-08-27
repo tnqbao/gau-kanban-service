@@ -424,3 +424,56 @@ func (ctrl *Controller) ChangeTicketPosition(c *gin.Context) {
 		},
 	})
 }
+
+// SearchTickets performs fuzzy search on tickets by title and ticket number
+func (ctrl *Controller) SearchTickets(c *gin.Context) {
+	ctx := c.Request.Context()
+	query := c.Query("q")
+	boardID := c.Query("board_id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Search Tickets] Search tickets request received with query: %s", query)
+
+	if query == "" {
+		ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Search Tickets] Search query is empty")
+		utils.JSON400(c, "Search query is required")
+		return
+	}
+
+	tickets, err := ctrl.Repository.SearchTickets(query, boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Search Tickets] Failed to search tickets")
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Search Tickets] Found %d tickets for query: %s", len(tickets), query)
+	utils.JSON200(c, gin.H{
+		"message": "Tickets found",
+		"data":    tickets,
+		"count":   len(tickets),
+	})
+}
+
+// FilterTickets filters tickets by label, assignee, and status
+func (ctrl *Controller) FilterTickets(c *gin.Context) {
+	ctx := c.Request.Context()
+	labelID := c.Query("label_id")
+	assigneeID := c.Query("assignee_id")
+	status := c.Query("status")
+	boardID := c.Query("board_id")
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Filter Tickets] Filter tickets request received")
+
+	tickets, err := ctrl.Repository.FilterTickets(labelID, assigneeID, status, boardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Filter Tickets] Failed to filter tickets")
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Filter Tickets] Found %d filtered tickets", len(tickets))
+	utils.JSON200(c, gin.H{
+		"message": "Filtered tickets retrieved",
+		"data":    tickets,
+		"count":   len(tickets),
+	})
+}
