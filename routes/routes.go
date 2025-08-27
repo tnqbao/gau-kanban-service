@@ -25,7 +25,6 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			columns.GET("/:id", ctrl.GetColumnById)
 			columns.PUT("/:id", ctrl.UpdateColumn)
 			columns.DELETE("/:id", ctrl.DeleteColumn)
-			columns.PUT("/:id/position", ctrl.UpdateColumnPosition)
 		}
 
 		// Ticket routes
