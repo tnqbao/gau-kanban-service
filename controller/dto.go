@@ -15,8 +15,8 @@ type KanbanTicketResponse struct {
 	Labels      []string `json:"Label"`
 	Assignees   []string `json:"assignees"`
 	Completed   bool     `json:"completed"`
-	DueDate     string   `json:"due_date,omitempty"`
-	Priority    string   `json:"priority,omitempty"`
+	DueDate     *string  `json:"due_date,omitempty"`
+	Priority    *string  `json:"priority,omitempty"`
 }
 
 type CreateColumnRequest struct {
@@ -121,7 +121,7 @@ type TicketWithDetailsResponse struct {
 	ColumnID    string          `json:"column_id"`
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
-	DueDate     string          `json:"due_date"`
+	DueDate     *string         `json:"due_date"`
 	Priority    string          `json:"priority"`
 	Position    int             `json:"position"`
 	CreatedAt   string          `json:"created_at"`

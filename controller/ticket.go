@@ -45,10 +45,11 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	}
 
 	ticket := &entity.Ticket{
-		TicketNo:  ticketNo,
-		ColumnID:  req.ColumnID,
-		Title:     req.Title,
-		Position:  maxPosition + 1,
+		TicketNo: ticketNo,
+		ColumnID: req.ColumnID,
+		Title:    req.Title,
+		Position: maxPosition + 1,
+		// DueDate is nil by default (pointer type), which will be NULL in database
 		CreatedAt: time.Now().Format(time.RFC3339),
 		UpdatedAt: time.Now().Format(time.RFC3339),
 	}
@@ -159,7 +160,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 		ticket.Description = *req.Description
 	}
 	if req.DueDate != nil {
-		ticket.DueDate = *req.DueDate
+		ticket.DueDate = req.DueDate
 	}
 	if req.Priority != nil {
 		ticket.Priority = *req.Priority

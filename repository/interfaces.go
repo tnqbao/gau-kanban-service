@@ -82,8 +82,8 @@ type TicketWithDetailsResponse struct {
 	ColumnID    string          `json:"column_id"`
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
-	DueDate     string          `json:"due_date"`
-	Priority    string          `json:"priority"`
+	DueDate     *string         `json:"due_date"`
+	Priority    *string         `json:"priority"`
 	Position    int             `json:"position"`
 	CreatedAt   string          `json:"created_at"`
 	UpdatedAt   string          `json:"updated_at"`

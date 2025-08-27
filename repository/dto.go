@@ -12,8 +12,8 @@ type TicketDTO struct {
 	Assignees   []AssigneeDTO `json:"assignees"` // Thông tin chi tiết assignees
 	Comments    []CommentDTO  `json:"comments"`  // Danh sách comments
 	Completed   bool          `json:"completed"`
-	DueDate     string        `json:"due_date,omitempty"`
-	Priority    string        `json:"priority,omitempty"`
+	DueDate     *string       `json:"due_date,omitempty"`
+	Priority    *string       `json:"priority,omitempty"`
 	CreatedAt   string        `json:"created_at"`
 	UpdatedAt   string        `json:"updated_at"`
 }
