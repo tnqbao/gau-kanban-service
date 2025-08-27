@@ -3,6 +3,7 @@ package middlewares
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -29,15 +30,15 @@ func CORSMiddleware(config *config.EnvConfig) gin.HandlerFunc {
 		panic("Failed to parse CORS config: " + err.Error())
 	}
 
-	//domains := config.CORS.AllowDomains
-	//domainList := strings.Split(domains, ",")
+	domains := config.CORS.AllowDomains
+	domainList := strings.Split(domains, ",")
 
 	return cors.New(cors.Config{
-		AllowAllOrigins:  true,
+		AllowOrigins:     domainList,
 		AllowMethods:     corsConfig.AllowMethods,
 		AllowHeaders:     corsConfig.AllowHeaders,
 		ExposeHeaders:    corsConfig.ExposeHeaders,
-		AllowCredentials: false,
+		AllowCredentials: corsConfig.AllowCredentials,
 		MaxAge:           time.Duration(corsConfig.MaxAge) * time.Second,
 	})
 }
