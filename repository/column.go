@@ -197,3 +197,9 @@ func (r *Repository) GetAllColumnWithFullTicketDetails() ([]ColumnWithTicketsDTO
 
 	return result, nil
 }
+
+func (r *Repository) GetMaxColumnPosition() (int, error) {
+	var maxPosition int
+	err := r.db.Table("columns").Select("COALESCE(MAX(position), 0)").Scan(&maxPosition).Error
+	return maxPosition, err
+}

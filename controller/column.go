@@ -14,9 +14,16 @@ func (ctrl *Controller) CreateColumn(c *gin.Context) {
 		return
 	}
 
+	// Get the current max position and set the new column's position to max + 1
+	maxPosition, err := ctrl.Repository.GetMaxColumnPosition()
+	if err != nil {
+		utils.JSON500(c, "Failed to get max column position: "+err.Error())
+		return
+	}
+
 	column := &entity.Column{
 		Title:    req.Title,
-		Position: req.Position,
+		Position: maxPosition + 1,
 	}
 
 	if err := ctrl.Repository.CreateColumn(column); err != nil {
@@ -25,7 +32,7 @@ func (ctrl *Controller) CreateColumn(c *gin.Context) {
 	}
 
 	utils.JSON200(c, gin.H{
-		"message": "Column created suctrlessfully",
+		"message": "Column created successfully",
 		"data":    column,
 	})
 }
