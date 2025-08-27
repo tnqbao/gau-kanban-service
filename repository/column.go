@@ -48,10 +48,10 @@ func (r *Repository) GetAllColumnWithTickets() ([]ColumnWithTicketsDTO, error) {
 	// Duyệt qua từng column và lấy tickets của nó
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
-			ID:      column.ID,
-			Title:   column.Title,
-			Order:   column.Position,
-			Tickets: []TicketDTO{},
+			ID:       column.ID,
+			Title:    column.Title,
+			Position: column.Position,
+			Tickets:  []TicketDTO{},
 		}
 
 		// Lấy tickets của column này
@@ -124,10 +124,10 @@ func (r *Repository) GetAllColumnWithFullTicketDetails() ([]ColumnWithTicketsDTO
 	// Duyệt qua từng column và lấy tickets với đầy đủ thông tin
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
-			ID:      column.ID,
-			Title:   column.Title,
-			Order:   column.Position,
-			Tickets: []TicketDTO{},
+			ID:       column.ID,
+			Title:    column.Title,
+			Position: column.Position,
+			Tickets:  []TicketDTO{},
 		}
 
 		// Lấy tickets của column này

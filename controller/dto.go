@@ -1,10 +1,10 @@
 package controller
 
 type KanbanColumnResponse struct {
-	ID      string                 `json:"id"`
-	Title   string                 `json:"title"`
-	Order   int                    `json:"order"`
-	Tickets []KanbanTicketResponse `json:"tickets"`
+	ID       string                 `json:"id"`
+	Title    string                 `json:"title"`
+	Position int                    `json:"position"`
+	Tickets  []KanbanTicketResponse `json:"tickets"`
 }
 
 type KanbanTicketResponse struct {

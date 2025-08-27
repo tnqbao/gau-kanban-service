@@ -49,10 +49,10 @@ func (ctrl *Controller) GetKanbanBoard(c *gin.Context) {
 		}
 
 		kanbanColumns[i] = KanbanColumnResponse{
-			ID:      col.ID,
-			Title:   col.Title,
-			Order:   col.Order,
-			Tickets: tickets,
+			ID:       col.ID,
+			Title:    col.Title,
+			Position: col.Position,
+			Tickets:  tickets,
 		}
 	}
 
