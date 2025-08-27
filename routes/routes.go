@@ -28,10 +28,6 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			boards.DELETE("/:id", ctrl.DeleteBoard)
 			boards.PUT("/:id/archive", ctrl.ArchiveBoard)
 			boards.PUT("/:id/restore", ctrl.RestoreBoard)
-
-			// Board-specific column routes
-			boards.GET("/:boardId/columns", ctrl.GetColumnsByBoardId)
-			boards.GET("/:boardId/columns/with-tickets", ctrl.GetColumnsByBoardIdWithTickets)
 		}
 
 		// Member routes
@@ -53,6 +49,13 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			columns.PUT("/:id", ctrl.UpdateColumn)
 			columns.DELETE("/:id", ctrl.DeleteColumn)
 			columns.PUT("/:id/change-position", ctrl.ChangeColumnPosition)
+		}
+
+		// Board-specific column routes (separate group to avoid wildcard conflicts)
+		boardColumns := api.Group("/board-columns")
+		{
+			boardColumns.GET("/:boardId", ctrl.GetColumnsByBoardId)
+			boardColumns.GET("/:boardId/with-tickets", ctrl.GetColumnsByBoardIdWithTickets)
 		}
 
 		// Ticket routes
