@@ -25,6 +25,7 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			columns.GET("/:id", ctrl.GetColumnById)
 			columns.PUT("/:id", ctrl.UpdateColumn)
 			columns.DELETE("/:id", ctrl.DeleteColumn)
+			columns.PUT("/:id/change-position", ctrl.ChangeColumnPosition)
 		}
 
 		// Ticket routes
@@ -38,6 +39,7 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 
 			// Position and movement operations
 			tickets.PUT("/:id/position", ctrl.UpdateTicketPosition)
+			tickets.PUT("/:id/change-position", ctrl.ChangeTicketPosition)
 			tickets.PUT("/move", ctrl.MoveTicketToColumn)
 			tickets.PUT("/move-with-position", ctrl.MoveTicketWithPosition)
 		}

@@ -140,3 +140,62 @@ func (ctrl *Controller) DeleteColumn(c *gin.Context) {
 		"message": "Column deleted successfully",
 	})
 }
+
+// ChangeColumnPosition thay đổi vị trí column với xử lý nâng cao
+func (ctrl *Controller) ChangeColumnPosition(c *gin.Context) {
+	ctx := c.Request.Context()
+	columnID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Change Column Position] Change column position request received for ID: %s", columnID)
+
+	var req ChangeColumnPositionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Column Position] Invalid request body")
+		utils.JSON400(c, "Invalid request body: "+err.Error())
+		return
+	}
+
+	// Validate new position is positive
+	if req.NewPosition < 1 {
+		ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Change Column Position] Invalid position: %d", req.NewPosition)
+		utils.JSON400(c, "Position must be greater than 0")
+		return
+	}
+
+	// Check if column exists
+	column, err := ctrl.Repository.GetByID(columnID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Column Position] Column not found: %s", columnID)
+		utils.JSON404(c, "Column not found")
+		return
+	}
+
+	// Get max position to validate new position
+	maxPosition, err := ctrl.Repository.GetMaxColumnPosition()
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Column Position] Failed to get max column position")
+		utils.JSON500(c, "Failed to get max column position: "+err.Error())
+		return
+	}
+
+	// Validate new position doesn't exceed max
+	if req.NewPosition > maxPosition {
+		req.NewPosition = maxPosition // Set to last position if exceeds
+	}
+
+	// Change column position
+	if err := ctrl.Repository.ChangeColumnPosition(columnID, req.NewPosition); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Column Position] Failed to change column position: %s", columnID)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Change Column Position] Column position changed successfully: %s from position %d to %d", columnID, column.Position, req.NewPosition)
+	utils.JSON200(c, gin.H{
+		"message": "Column position changed successfully",
+		"data": gin.H{
+			"column_id":    columnID,
+			"old_position": column.Position,
+			"new_position": req.NewPosition,
+		},
+	})
+}

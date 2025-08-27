@@ -13,6 +13,7 @@ type ColumnRepositoryInterface interface {
 	Update(column *entity.Column) error
 	Delete(id string) error
 	UpdatePosition(id string, position int) error
+	ChangeColumnPosition(columnID string, newPosition int) error
 	GetAllWithTickets() ([]ColumnWithTicketsDTO, error)
 	GetAllWithFullTicketDetails() ([]ColumnWithTicketsDTO, error)
 	GetMaxColumnPosition() (int, error)
@@ -29,6 +30,7 @@ type TicketRepositoryInterface interface {
 	MoveTicketToColumn(ticketID, columnID string) error
 	MoveTicketToColumnWithPosition(ticketID, columnID string, position int) error
 	UpdateTicketPosition(ticketID, columnID string, position int) error
+	ChangeTicketPosition(ticketID string, newColumnID string, newPosition int) error
 	GetMaxTicketPositionInColumn(columnID string) (int, error)
 	GenerateTicketNumber() (string, error)
 	GetTicketWithDetails(ticketID string) (*TicketWithDetailsResponse, error)

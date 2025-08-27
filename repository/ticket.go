@@ -236,3 +236,96 @@ func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsRe
 
 	return response, nil
 }
+
+// ChangeTicketPosition changes ticket position with advanced handling (within same column or between columns)
+func (r *Repository) ChangeTicketPosition(ticketID string, newColumnID string, newPosition int) error {
+	// Get current ticket info
+	var currentTicket entity.Ticket
+	if err := r.db.Where("id = ?", ticketID).First(&currentTicket).Error; err != nil {
+		return err
+	}
+
+	currentColumnID := currentTicket.ColumnID
+	currentPosition := currentTicket.Position
+
+	// Start transaction
+	tx := r.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	if currentColumnID == newColumnID {
+		// Moving within the same column
+		if currentPosition == newPosition {
+			// No change needed
+			return tx.Commit().Error
+		}
+
+		if newPosition < currentPosition {
+			// Moving up (decrease position number)
+			// Shift other tickets down (increase their position)
+			if err := tx.Model(&entity.Ticket{}).
+				Where("column_id = ? AND position >= ? AND position < ? AND id != ?",
+					newColumnID, newPosition, currentPosition, ticketID).
+				Update("position", r.db.Raw("position + 1")).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		} else {
+			// Moving down (increase position number)
+			// Shift other tickets up (decrease their position)
+			if err := tx.Model(&entity.Ticket{}).
+				Where("column_id = ? AND position > ? AND position <= ? AND id != ?",
+					newColumnID, currentPosition, newPosition, ticketID).
+				Update("position", r.db.Raw("position - 1")).Error; err != nil {
+				tx.Rollback()
+				return err
+			}
+		}
+
+		// Update current ticket position
+		if err := tx.Model(&entity.Ticket{}).
+			Where("id = ?", ticketID).
+			Update("position", newPosition).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		// Moving between different columns
+
+		// 1. Shift tickets in old column to fill the gap
+		if err := tx.Model(&entity.Ticket{}).
+			Where("column_id = ? AND position > ?", currentColumnID, currentPosition).
+			Update("position", r.db.Raw("position - 1")).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 2. Make space in new column by shifting tickets down
+		if err := tx.Model(&entity.Ticket{}).
+			Where("column_id = ? AND position >= ?", newColumnID, newPosition).
+			Update("position", r.db.Raw("position + 1")).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// 3. Update current ticket with new column and position
+		if err := tx.Model(&entity.Ticket{}).
+			Where("id = ?", ticketID).
+			Updates(map[string]interface{}{
+				"column_id": newColumnID,
+				"position":  newPosition,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
+}

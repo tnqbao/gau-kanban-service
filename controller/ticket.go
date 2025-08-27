@@ -346,3 +346,81 @@ func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
 		"message": "Ticket moved with position successfully",
 	})
 }
+
+// ChangeTicketPosition thay đổi vị trí ticket với xử lý nâng cao (trong cùng column hoặc giữa các column)
+func (ctrl *Controller) ChangeTicketPosition(c *gin.Context) {
+	ctx := c.Request.Context()
+	ticketID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Change Ticket Position] Change ticket position request received for ID: %s", ticketID)
+
+	var req ChangeTicketPositionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Ticket Position] Invalid request body")
+		utils.JSON400(c, "Invalid request body: "+err.Error())
+		return
+	}
+
+	// Validate new position is positive
+	if req.NewPosition < 1 {
+		ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Change Ticket Position] Invalid position: %d", req.NewPosition)
+		utils.JSON400(c, "Position must be greater than 0")
+		return
+	}
+
+	// Check if ticket exists
+	currentTicket, err := ctrl.Repository.GetTicketByID(ticketID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Ticket Position] Ticket not found: %s", ticketID)
+		utils.JSON404(c, "Ticket not found")
+		return
+	}
+
+	// Check if new column exists
+	_, err = ctrl.Repository.GetByID(req.NewColumnID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Ticket Position] Column not found: %s", req.NewColumnID)
+		utils.JSON404(c, "Column not found")
+		return
+	}
+
+	// Get max position in target column to validate new position
+	maxPosition, err := ctrl.Repository.GetMaxTicketPositionInColumn(req.NewColumnID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Ticket Position] Failed to get max ticket position in column: %s", req.NewColumnID)
+		utils.JSON500(c, "Failed to get max ticket position: "+err.Error())
+		return
+	}
+
+	// If moving to same column, max position should not change
+	// If moving to different column, allow position up to max+1 (for appending)
+	if currentTicket.ColumnID != req.NewColumnID && req.NewPosition > maxPosition+1 {
+		req.NewPosition = maxPosition + 1 // Set to last position + 1 if exceeds
+	} else if currentTicket.ColumnID == req.NewColumnID && req.NewPosition > maxPosition {
+		req.NewPosition = maxPosition // Set to last position if exceeds within same column
+	}
+
+	// Change ticket position
+	if err := ctrl.Repository.ChangeTicketPosition(ticketID, req.NewColumnID, req.NewPosition); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Change Ticket Position] Failed to change ticket position: %s", ticketID)
+		utils.JSON500(c, err.Error())
+		return
+	}
+
+	// Log the change details
+	if currentTicket.ColumnID == req.NewColumnID {
+		ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Change Ticket Position] Ticket position changed within same column: %s from position %d to %d", ticketID, currentTicket.Position, req.NewPosition)
+	} else {
+		ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Change Ticket Position] Ticket moved between columns: %s from column %s (position %d) to column %s (position %d)", ticketID, currentTicket.ColumnID, currentTicket.Position, req.NewColumnID, req.NewPosition)
+	}
+
+	utils.JSON200(c, gin.H{
+		"message": "Ticket position changed successfully",
+		"data": gin.H{
+			"ticket_id":     ticketID,
+			"old_column_id": currentTicket.ColumnID,
+			"old_position":  currentTicket.Position,
+			"new_column_id": req.NewColumnID,
+			"new_position":  req.NewPosition,
+		},
+	})
+}

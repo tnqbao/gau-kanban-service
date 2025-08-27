@@ -184,3 +184,62 @@ func (r *Repository) GetMaxColumnPosition() (int, error) {
 	err := r.db.Table("columns").Select("COALESCE(MAX(position), 0)").Scan(&maxPosition).Error
 	return maxPosition, err
 }
+
+// ChangeColumnPosition changes column position with advanced handling
+func (r *Repository) ChangeColumnPosition(columnID string, newPosition int) error {
+	// Get current column info
+	var currentColumn entity.Column
+	if err := r.db.Where("id = ?", columnID).First(&currentColumn).Error; err != nil {
+		return err
+	}
+
+	currentPosition := currentColumn.Position
+
+	// If position hasn't changed, do nothing
+	if currentPosition == newPosition {
+		return nil
+	}
+
+	// Start transaction
+	tx := r.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if tx.Error != nil {
+		return tx.Error
+	}
+
+	// Handle position changes
+	if newPosition < currentPosition {
+		// Moving up (decrease position number)
+		// Shift other columns down (increase their position)
+		if err := tx.Model(&entity.Column{}).
+			Where("position >= ? AND position < ? AND id != ?", newPosition, currentPosition, columnID).
+			Update("position", r.db.Raw("position + 1")).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		// Moving down (increase position number)
+		// Shift other columns up (decrease their position)
+		if err := tx.Model(&entity.Column{}).
+			Where("position > ? AND position <= ? AND id != ?", currentPosition, newPosition, columnID).
+			Update("position", r.db.Raw("position - 1")).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Update current column position
+	if err := tx.Model(&entity.Column{}).
+		Where("id = ?", columnID).
+		Update("position", newPosition).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}

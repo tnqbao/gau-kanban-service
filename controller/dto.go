@@ -137,3 +137,13 @@ type AssignmentDTO struct {
 	UserFullName string `json:"user_full_name"`
 	AssignedAt   string `json:"assigned_at"`
 }
+
+// Advanced position change requests
+type ChangeColumnPositionRequest struct {
+	NewPosition int `json:"new_position" binding:"required"`
+}
+
+type ChangeTicketPositionRequest struct {
+	NewColumnID string `json:"new_column_id" binding:"required"`
+	NewPosition int    `json:"new_position" binding:"required"`
+}
