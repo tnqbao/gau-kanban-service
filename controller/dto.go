@@ -170,3 +170,23 @@ type CreateMemberRequest struct {
 type UpdateMemberRequest struct {
 	FullName string `json:"full_name"`
 }
+
+// BoardWithMembers response DTO
+type BoardWithMembersResponse struct {
+	ID          string      `json:"id"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Archived    bool        `json:"archived"`
+	CreatedAt   string      `json:"created_at"`
+	UpdatedAt   string      `json:"updated_at"`
+	Members     []MemberDTO `json:"members"`
+}
+
+type MemberDTO struct {
+	ID        string `json:"id"`
+	BoardID   string `json:"board_id"`
+	MemberID  string `json:"member_id"`
+	FullName  string `json:"full_name"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}

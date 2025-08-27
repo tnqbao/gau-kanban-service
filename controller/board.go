@@ -87,7 +87,7 @@ func (ctrl *Controller) GetBoards(c *gin.Context) {
 	})
 }
 
-// GetBoardByID lấy board theo ID
+// GetBoardByID lấy board theo ID kèm theo tất cả members
 func (ctrl *Controller) GetBoardByID(c *gin.Context) {
 	ctx := c.Request.Context()
 	id := c.Param("id")
@@ -100,10 +100,42 @@ func (ctrl *Controller) GetBoardByID(c *gin.Context) {
 		return
 	}
 
-	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Board By ID] Board retrieved successfully: %s", id)
+	// Lấy tất cả members của board
+	members, err := ctrl.Repository.GetMembersByBoardID(id)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Board By ID] Failed to get members for board: %s", id)
+		utils.JSON500(c, "Failed to get board members")
+		return
+	}
+
+	// Convert members to DTO
+	memberDTOs := make([]MemberDTO, len(members))
+	for i, member := range members {
+		memberDTOs[i] = MemberDTO{
+			ID:        member.ID,
+			BoardID:   member.BoardID,
+			MemberID:  member.MemberID,
+			FullName:  member.FullName,
+			CreatedAt: member.CreatedAt,
+			UpdatedAt: member.UpdatedAt,
+		}
+	}
+
+	// Tạo response với board và members
+	response := BoardWithMembersResponse{
+		ID:          board.ID,
+		Title:       board.Title,
+		Description: board.Description,
+		Archived:    board.Archived,
+		CreatedAt:   board.CreatedAt,
+		UpdatedAt:   board.UpdatedAt,
+		Members:     memberDTOs,
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Board By ID] Board and %d members retrieved successfully: %s", len(members), id)
 	utils.JSON200(c, gin.H{
-		"message": "Board retrieved successfully",
-		"data":    board,
+		"message": "Board and members retrieved successfully",
+		"data":    response,
 	})
 }
 
