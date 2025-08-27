@@ -203,3 +203,82 @@ func (r *Repository) GetMaxColumnPosition() (int, error) {
 	err := r.db.Table("columns").Select("COALESCE(MAX(position), 0)").Scan(&maxPosition).Error
 	return maxPosition, err
 }
+
+func (r *Repository) GetColumnByIdWithTickets(id string) (*ColumnWithTicketsDTO, error) {
+	var column entity.Column
+	err := r.db.Where("id = ?", id).First(&column).Error
+	if err != nil {
+		return nil, err
+	}
+
+	columnDTO := ColumnWithTicketsDTO{
+		ID:       column.ID,
+		Title:    column.Title,
+		Position: column.Position,
+		Tickets:  []TicketDTO{},
+	}
+
+	// Lấy tickets của column này
+	var tickets []entity.Ticket
+	err = r.db.Where("column_id = ?", column.ID).Order("created_at ASC").Find(&tickets).Error
+	if err != nil {
+		return &columnDTO, nil // Return column without tickets if error
+	}
+
+	// Convert tickets thành TicketDTO với thông tin đầy đủ
+	for _, ticket := range tickets {
+		// Lấy labels của ticket
+		var labels []LabelDTO
+		err := r.db.Table("labels").
+			Select("labels.id, labels.name, labels.color").
+			Joins("JOIN ticket_labels ON labels.id = ticket_labels.label_id").
+			Where("ticket_labels.ticket_id = ?", ticket.ID).
+			Scan(&labels).Error
+		if err != nil {
+			labels = []LabelDTO{}
+		}
+
+		// Lấy assignees của ticket
+		var assignees []AssigneeDTO
+		err = r.db.Table("task_assignments").
+			Select("task_assignments.id, task_assignments.user_id, task_assignments.user_full_name as user_full_name, task_assignments.assigned_at").
+			Where("ticket_id = ?", ticket.ID).
+			Scan(&assignees).Error
+		if err != nil {
+			assignees = []AssigneeDTO{}
+		}
+
+		// Lấy comments của ticket
+		var comments []CommentDTO
+		err = r.db.Table("ticket_comments").
+			Select("id, user_id, content, created_at").
+			Where("ticket_id = ?", ticket.ID).
+			Order("created_at ASC").
+			Scan(&comments).Error
+		if err != nil {
+			comments = []CommentDTO{}
+		}
+
+		// Xác định completed dựa trên column name
+		completed := column.Title == "DONE" || column.Title == "COMPLETED"
+
+		ticketDTO := TicketDTO{
+			ID:          ticket.ID,
+			Title:       ticket.Title,
+			Description: ticket.Description,
+			TicketID:    ticket.ID,
+			Labels:      labels,
+			Assignees:   assignees,
+			Comments:    comments,
+			Completed:   completed,
+			DueDate:     ticket.DueDate,
+			Priority:    ticket.Priority,
+			CreatedAt:   ticket.CreatedAt,
+			UpdatedAt:   ticket.UpdatedAt,
+		}
+
+		columnDTO.Tickets = append(columnDTO.Tickets, ticketDTO)
+	}
+
+	return &columnDTO, nil
+}

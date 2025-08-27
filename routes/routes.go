@@ -22,6 +22,7 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 		{
 			columns.POST("", ctrl.CreateColumn)
 			columns.GET("", ctrl.GetColumns)
+			columns.GET("/:id", ctrl.GetColumnById)
 			columns.PUT("/:id", ctrl.UpdateColumn)
 			columns.DELETE("/:id", ctrl.DeleteColumn)
 			columns.PUT("/:id/position", ctrl.UpdateColumnPosition)
@@ -60,12 +61,6 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			checklists.PUT("/:id", ctrl.UpdateChecklist)
 			checklists.PUT("/:id/position", ctrl.UpdateChecklistPosition)
 			checklists.DELETE("/:id", ctrl.DeleteChecklist)
-		}
-
-		// Kanban board view routes
-		kanban := api.Group("/board")
-		{
-			kanban.GET("", ctrl.GetKanbanBoard)
 		}
 	}
 	return r

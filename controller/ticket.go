@@ -11,8 +11,12 @@ import (
 
 // CreateTicket tạo ticket mới
 func (ctrl *Controller) CreateTicket(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Ticket] Create new ticket request received")
+
 	var req CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Invalid request body")
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
@@ -20,6 +24,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	// Kiểm tra column có tồn tại không
 	_, err := ctrl.Repository.GetColumnByID(req.ColumnID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Column not found: %s", req.ColumnID)
 		utils.JSON404(c, "Column not found")
 		return
 	}
@@ -27,6 +32,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	// Lấy position cuối cùng trong column
 	maxPosition, err := ctrl.Repository.GetMaxTicketPositionInColumn(req.ColumnID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Failed to get max ticket position in column: %s", req.ColumnID)
 		utils.JSON500(c, err.Error())
 		return
 	}
@@ -34,6 +40,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	// Tạo ticket number theo format TASK-XXXX
 	ticketNo, err := ctrl.Repository.GenerateTicketNumber()
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Failed to generate ticket number")
 		utils.JSON500(c, err.Error())
 		return
 	}
@@ -51,6 +58,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	}
 
 	if err := ctrl.Repository.CreateTicket(ticket); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Failed to create ticket")
 		utils.JSON500(c, err.Error())
 		return
 	}
@@ -95,6 +103,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Ticket] Ticket created successfully: %s", ticket.ID)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket created successfully",
 		"data":    ticketWithDetails,
@@ -103,7 +112,9 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 
 // GetTickets lấy danh sách tickets
 func (ctrl *Controller) GetTickets(c *gin.Context) {
+	ctx := c.Request.Context()
 	columnID := c.Query("column_id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Tickets] Get tickets request received with column_id: %s", columnID)
 
 	var tickets []entity.Ticket
 	var err error
@@ -115,6 +126,7 @@ func (ctrl *Controller) GetTickets(c *gin.Context) {
 	}
 
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Tickets] Failed to get tickets")
 		utils.JSON500(c, err.Error())
 		return
 	}
@@ -125,12 +137,13 @@ func (ctrl *Controller) GetTickets(c *gin.Context) {
 		ticketDetails, err := ctrl.Repository.GetTicketWithDetails(ticket.ID)
 		if err != nil {
 			// Log error but continue with other tickets
-			fmt.Printf("Failed to get ticket details for %s: %v\n", ticket.ID, err)
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Tickets] Failed to get ticket details for %s", ticket.ID)
 			continue
 		}
 		ticketsWithDetails = append(ticketsWithDetails, ticketDetails)
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Tickets] Retrieved %d tickets successfully", len(ticketsWithDetails))
 	utils.JSON200(c, gin.H{
 		"data": ticketsWithDetails,
 	})
@@ -138,14 +151,18 @@ func (ctrl *Controller) GetTickets(c *gin.Context) {
 
 // GetTicketByID lấy ticket theo ID
 func (ctrl *Controller) GetTicketByID(c *gin.Context) {
+	ctx := c.Request.Context()
 	ticketID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Ticket By ID] Get ticket request received for ID: %s", ticketID)
 
 	ticket, err := ctrl.Repository.GetTicketWithDetails(ticketID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Ticket By ID] Ticket not found: %s", ticketID)
 		utils.JSON404(c, "Ticket not found")
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Ticket By ID] Ticket retrieved successfully: %s", ticketID)
 	utils.JSON200(c, gin.H{
 		"data": ticket,
 	})
@@ -153,15 +170,20 @@ func (ctrl *Controller) GetTicketByID(c *gin.Context) {
 
 // UpdateTicket cập nhật ticket
 func (ctrl *Controller) UpdateTicket(c *gin.Context) {
+	ctx := c.Request.Context()
 	ticketID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Ticket] Update ticket request received for ID: %s", ticketID)
+
 	var req UpdateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Invalid request body")
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	ticket, err := ctrl.Repository.GetTicketByID(ticketID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Ticket not found: %s", ticketID)
 		utils.JSON404(c, "Ticket not found")
 		return
 	}
@@ -183,6 +205,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 	ticket.UpdatedAt = time.Now().Format(time.RFC3339)
 
 	if err := ctrl.Repository.UpdateTicket(ticket); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to update ticket: %s", ticketID)
 		utils.JSON500(c, err.Error())
 		return
 	}
@@ -191,6 +214,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 	if req.Assignments != nil {
 		// Xóa assignments cũ
 		if err := ctrl.Repository.DeleteAssignmentsByTicketID(ticketID); err != nil {
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to delete old assignments for ticket: %s", ticketID)
 			utils.JSON500(c, err.Error())
 			return
 		}
@@ -203,6 +227,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 				UserFullName: assignReq.UserFullName,
 			}
 			if err := ctrl.Repository.CreateAssignment(assignment); err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to create assignment for ticket: %s", ticketID)
 				utils.JSON500(c, err.Error())
 				return
 			}
@@ -213,6 +238,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 	if req.Checklists != nil {
 		// Xóa checklists cũ
 		if err := ctrl.Repository.DeleteChecklistsByTicketID(ticketID); err != nil {
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to delete old checklists for ticket: %s", ticketID)
 			utils.JSON500(c, err.Error())
 			return
 		}
@@ -228,6 +254,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 				UpdatedAt: time.Now().Format(time.RFC3339),
 			}
 			if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to create checklist for ticket: %s", ticketID)
 				utils.JSON500(c, err.Error())
 				return
 			}
@@ -237,10 +264,12 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 	// Lấy ticket với details sau khi update
 	ticketWithDetails, err := ctrl.Repository.GetTicketWithDetails(ticketID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket] Failed to get updated ticket details: %s", ticketID)
 		utils.JSON500(c, err.Error())
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Ticket] Ticket updated successfully: %s", ticketID)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket updated successfully",
 		"data":    ticketWithDetails,
@@ -249,13 +278,17 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 
 // DeleteTicket xóa ticket
 func (ctrl *Controller) DeleteTicket(c *gin.Context) {
+	ctx := c.Request.Context()
 	ticketID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Delete Ticket] Delete ticket request received for ID: %s", ticketID)
 
 	if err := ctrl.Repository.DeleteTicket(ticketID); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Ticket] Failed to delete ticket: %s", ticketID)
 		utils.JSON500(c, err.Error())
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Delete Ticket] Ticket deleted successfully: %s", ticketID)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket deleted successfully",
 	})
@@ -263,18 +296,24 @@ func (ctrl *Controller) DeleteTicket(c *gin.Context) {
 
 // UpdateTicketPosition cập nhật vị trí ticket trong column
 func (ctrl *Controller) UpdateTicketPosition(c *gin.Context) {
+	ctx := c.Request.Context()
 	ticketID := c.Param("id")
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Ticket Position] Update ticket position request received for ID: %s", ticketID)
+
 	var req UpdateTicketPositionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket Position] Invalid request body")
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	if err := ctrl.Repository.UpdateTicketPosition(ticketID, req.ColumnID, req.Position); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Ticket Position] Failed to update ticket position: %s", ticketID)
 		utils.JSON500(c, err.Error())
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Ticket Position] Ticket position updated successfully: %s to position %d", ticketID, req.Position)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket position updated successfully",
 	})
@@ -282,17 +321,23 @@ func (ctrl *Controller) UpdateTicketPosition(c *gin.Context) {
 
 // MoveTicketToColumn di chuyển ticket sang column khác
 func (ctrl *Controller) MoveTicketToColumn(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Move Ticket To Column] Move ticket to column request received")
+
 	var req MoveTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket To Column] Invalid request body")
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
 
 	if err := ctrl.Repository.MoveTicketToColumn(req.TicketID, req.ColumnID); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket To Column] Failed to move ticket %s to column %s", req.TicketID, req.ColumnID)
 		utils.JSON500(c, err.Error())
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Move Ticket To Column] Ticket moved successfully: %s to column %s", req.TicketID, req.ColumnID)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket moved successfully",
 	})
@@ -300,8 +345,12 @@ func (ctrl *Controller) MoveTicketToColumn(c *gin.Context) {
 
 // MoveTicketWithPosition di chuyển ticket sang column khác với position cụ thể
 func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Move Ticket With Position] Move ticket with position request received")
+
 	var req MoveTicketWithPositionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket With Position] Invalid request body")
 		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
@@ -309,6 +358,7 @@ func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
 	// Kiểm tra ticket có tồn tại không
 	_, err := ctrl.Repository.GetTicketByID(req.TicketID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket With Position] Ticket not found: %s", req.TicketID)
 		utils.JSON404(c, "Ticket not found")
 		return
 	}
@@ -316,15 +366,18 @@ func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
 	// Kiểm tra column có tồn tại không
 	_, err = ctrl.Repository.GetColumnByID(req.ColumnID)
 	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket With Position] Column not found: %s", req.ColumnID)
 		utils.JSON404(c, "Column not found")
 		return
 	}
 
 	if err := ctrl.Repository.MoveTicketToColumnWithPosition(req.TicketID, req.ColumnID, req.Position); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket With Position] Failed to move ticket %s to column %s with position %d", req.TicketID, req.ColumnID, req.Position)
 		utils.JSON500(c, err.Error())
 		return
 	}
 
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Move Ticket With Position] Ticket moved with position successfully: %s to column %s at position %d", req.TicketID, req.ColumnID, req.Position)
 	utils.JSON200(c, gin.H{
 		"message": "Ticket moved with position successfully",
 	})
