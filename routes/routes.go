@@ -8,13 +8,15 @@ import (
 
 func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 	r := gin.Default()
+
 	middleware, err := middlewares.NewMiddlewares(ctrl)
 	if err != nil {
 		panic("Failed to initialize middlewares: " + err.Error())
 	}
+	r.Use(middleware.CORSMiddleware)
 	api := r.Group("/api/v2/kanban")
 	{
-		api.Use(middleware.CORSMiddleware)
+		//api.Use(middleware.CORSMiddleware)
 		// Column routes
 		columns := api.Group("/columns")
 		{
