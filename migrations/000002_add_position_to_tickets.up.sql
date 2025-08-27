@@ -1,2 +1,0 @@
-ALTER TABLE tickets ADD COLUMN position INTEGER DEFAULT 0;
-
