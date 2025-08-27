@@ -7,7 +7,7 @@ import (
 
 type Repository struct {
 	db *gorm.DB
-	//cacheDb *redis.Client
+	//cacheDb        *redis.Client
 }
 
 var repository *Repository

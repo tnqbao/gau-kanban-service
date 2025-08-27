@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -46,54 +45,18 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	}
 
 	ticket := &entity.Ticket{
-		TicketNo:    ticketNo,
-		ColumnID:    req.ColumnID,
-		Title:       req.Title,
-		Description: req.Description,
-		DueDate:     req.DueDate,
-		Priority:    req.Priority,
-		Position:    maxPosition + 1, // Đặt ở cuối column
-		CreatedAt:   time.Now().Format(time.RFC3339),
-		UpdatedAt:   time.Now().Format(time.RFC3339),
+		TicketNo:  ticketNo,
+		ColumnID:  req.ColumnID,
+		Title:     req.Title,
+		Position:  maxPosition + 1,
+		CreatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: time.Now().Format(time.RFC3339),
 	}
 
 	if err := ctrl.Repository.CreateTicket(ticket); err != nil {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Failed to create ticket")
 		utils.JSON500(c, err.Error())
 		return
-	}
-
-	// Tạo assignments nếu có
-	if req.Assignments != nil && len(req.Assignments) > 0 {
-		for _, assignReq := range req.Assignments {
-			assignment := &entity.TaskAssignment{
-				TicketID:     ticket.ID,
-				UserID:       assignReq.UserID,
-				UserFullName: assignReq.UserFullName,
-			}
-			if err := ctrl.Repository.CreateAssignment(assignment); err != nil {
-				// Log error but don't fail the whole operation
-				fmt.Printf("Failed to create assignment: %v\n", err)
-			}
-		}
-	}
-
-	// Tạo checklists nếu có
-	if req.Checklists != nil && len(req.Checklists) > 0 {
-		for i, checklistReq := range req.Checklists {
-			checklist := &entity.Checklist{
-				TicketID:  ticket.ID,
-				Title:     checklistReq.Title,
-				Completed: false,
-				Position:  i + 1,
-				CreatedAt: time.Now().Format(time.RFC3339),
-				UpdatedAt: time.Now().Format(time.RFC3339),
-			}
-			if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
-				// Log error but don't fail the whole operation
-				fmt.Printf("Failed to create checklist: %v\n", err)
-			}
-		}
 	}
 
 	// Lấy ticket với assignments và checklists

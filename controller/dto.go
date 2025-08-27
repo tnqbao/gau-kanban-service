@@ -44,13 +44,13 @@ type UpdateAssignmentRequest struct {
 
 // Ticket DTOs
 type CreateTicketRequest struct {
-	ColumnID    string                     `json:"column_id" binding:"required"`
-	Title       string                     `json:"title" binding:"required"`
-	Description string                     `json:"description"`
-	DueDate     string                     `json:"due_date"`
-	Priority    string                     `json:"priority"`
-	Assignments []CreateAssignmentInTicket `json:"assignments"`
-	Checklists  []CreateChecklistInTicket  `json:"checklists"`
+	ColumnID string `json:"column_id" binding:"required"`
+	Title    string `json:"title" binding:"required"`
+	//Description string                     `json:"description"`
+	//DueDate     string                     `json:"due_date"`
+	//Priority    string                     `json:"priority"`
+	//Assignments []CreateAssignmentInTicket `json:"assignments"`
+	//Checklists  []CreateChecklistInTicket  `json:"checklists"`
 }
 
 type UpdateTicketRequest struct {
