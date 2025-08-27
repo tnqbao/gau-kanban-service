@@ -20,7 +20,8 @@ type KanbanTicketResponse struct {
 }
 
 type CreateColumnRequest struct {
-	Title string `json:"title" binding:"required"`
+	Title   string `json:"title" binding:"required"`
+	BoardID string `json:"board_id" binding:"required"`
 }
 
 type UpdateColumnRequest struct {

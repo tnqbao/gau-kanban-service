@@ -5,15 +5,18 @@ import (
 )
 
 type Provider struct {
-	LoggerProvider *LoggerProvider
+	LoggerProvider               *LoggerProvider
+	AuthorizationServiceProvider *AuthorizationServiceProvider
 }
 
 var provider *Provider
 
 func InitProvider(cfg *config.EnvConfig) *Provider {
 	loggerProvider := NewLoggerProvider()
+	authorizationServiceProvider := NewAuthorizationServiceProvider(cfg)
 	provider = &Provider{
-		LoggerProvider: loggerProvider,
+		LoggerProvider:               loggerProvider,
+		AuthorizationServiceProvider: authorizationServiceProvider,
 	}
 
 	return provider

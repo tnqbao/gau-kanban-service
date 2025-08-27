@@ -18,6 +18,14 @@ func (ctrl *Controller) CreateColumn(c *gin.Context) {
 		return
 	}
 
+	// Validate that the board exists
+	_, err := ctrl.Repository.GetBoardByID(req.BoardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Column] Board not found: %s", req.BoardID)
+		utils.JSON404(c, "Board not found")
+		return
+	}
+
 	// Get the current max position and set the new column's position to max + 1
 	maxPosition, err := ctrl.Repository.GetMaxColumnPosition()
 	if err != nil {
@@ -27,6 +35,7 @@ func (ctrl *Controller) CreateColumn(c *gin.Context) {
 	}
 
 	column := &entity.Column{
+		BoardID:  req.BoardID,
 		Title:    req.Title,
 		Position: maxPosition + 1,
 	}

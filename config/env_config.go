@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -19,6 +20,16 @@ type EnvConfig struct {
 		GlobalDomain string
 	}
 
+	ExternalService struct {
+		AuthorizationServiceURL string
+	}
+
+	JWT struct {
+		SecretKey string
+		Algorithm string
+		Expire    int
+	}
+
 	Grafana struct {
 		OTLPEndpoint string
 		ServiceName  string
@@ -28,6 +39,8 @@ type EnvConfig struct {
 		Mode  string
 		Group string
 	}
+
+	PrivateKey string
 }
 
 func LoadEnvConfig() *EnvConfig {
@@ -40,15 +53,15 @@ func LoadEnvConfig() *EnvConfig {
 	config.Postgres.Password = os.Getenv("PGPOOL_PASSWORD")
 	config.Postgres.Port = os.Getenv("PGPOOL_PORT")
 
-	//// JWT
-	//config.JWT.SecretKey = os.Getenv("JWT_SECRET_KEY")
-	//config.JWT.Algorithm = os.Getenv("JWT_ALGORITHM")
-	//
-	//if val := os.Getenv("JWT_EXPIRE"); val != "" {
-	//	fmt.Sscanf(val, "%d", &config.JWT.Expire)
-	//} else {
-	//	config.JWT.Expire = 3600 * 24 * 7
-	//}
+	// JWT
+	config.JWT.SecretKey = os.Getenv("JWT_SECRET_KEY")
+	config.JWT.Algorithm = os.Getenv("JWT_ALGORITHM")
+
+	if val := os.Getenv("JWT_EXPIRE"); val != "" {
+		fmt.Sscanf(val, "%d", &config.JWT.Expire)
+	} else {
+		config.JWT.Expire = 3600 * 24 * 7
+	}
 	//
 	config.CORS.AllowDomains = os.Getenv("ALLOWED_DOMAINS")
 	config.CORS.GlobalDomain = os.Getenv("GLOBAL_DOMAIN")
@@ -62,10 +75,10 @@ func LoadEnvConfig() *EnvConfig {
 
 	//config.PrivateKey = os.Getenv("PRIVATE_KEY")
 	//
-	//config.ExternalService.AuthorizationServiceURL = os.Getenv("AUTHORIZATION_SERVICE_URL")
-	//if config.ExternalService.AuthorizationServiceURL == "" {
-	//	config.ExternalService.AuthorizationServiceURL = "http://localhost:8080"
-	//}
+	config.ExternalService.AuthorizationServiceURL = os.Getenv("AUTHORIZATION_SERVICE_URL")
+	if config.ExternalService.AuthorizationServiceURL == "" {
+		config.ExternalService.AuthorizationServiceURL = "http://localhost:8080"
+	}
 	//config.ExternalService.UploadServiceURL = os.Getenv("UPLOAD_SERVICE_URL")
 	//if config.ExternalService.UploadServiceURL == "" {
 	//	config.ExternalService.UploadServiceURL = "http://localhost:8081"
@@ -102,6 +115,8 @@ func LoadEnvConfig() *EnvConfig {
 	if config.Environment.Group == "" {
 		config.Environment.Group = "local"
 	}
+
+	config.PrivateKey = os.Getenv("PRIVATE_KEY")
 
 	return &config
 }
