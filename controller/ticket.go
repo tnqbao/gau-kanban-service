@@ -21,7 +21,7 @@ func (ctrl *Controller) CreateTicket(c *gin.Context) {
 	}
 
 	// Kiểm tra column có tồn tại không
-	_, err := ctrl.Repository.GetColumnByID(req.ColumnID)
+	_, err := ctrl.Repository.GetByID(req.ColumnID)
 	if err != nil {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Ticket] Column not found: %s", req.ColumnID)
 		utils.JSON404(c, "Column not found")
@@ -163,7 +163,7 @@ func (ctrl *Controller) UpdateTicket(c *gin.Context) {
 		ticket.DueDate = req.DueDate
 	}
 	if req.Priority != nil {
-		ticket.Priority = *req.Priority
+		ticket.Priority = req.Priority
 	}
 
 	ticket.UpdatedAt = time.Now().Format(time.RFC3339)
@@ -328,7 +328,7 @@ func (ctrl *Controller) MoveTicketWithPosition(c *gin.Context) {
 	}
 
 	// Kiểm tra column có tồn tại không
-	_, err = ctrl.Repository.GetColumnByID(req.ColumnID)
+	_, err = ctrl.Repository.GetByID(req.ColumnID)
 	if err != nil {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket With Position] Column not found: %s", req.ColumnID)
 		utils.JSON404(c, "Column not found")
