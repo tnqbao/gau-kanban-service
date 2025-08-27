@@ -17,6 +17,26 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 	api := r.Group("/api/v2/kanban")
 	{
 		//api.Use(middleware.CORSMiddleware)
+		// Board routes
+		boards := api.Group("/boards")
+		{
+			boards.POST("", ctrl.CreateBoard)
+			boards.GET("", ctrl.GetBoards)
+			boards.GET("/:id", ctrl.GetBoardByID)
+			boards.PUT("/:id", ctrl.UpdateBoard)
+			boards.DELETE("/:id", ctrl.DeleteBoard)
+		}
+
+		// Member routes
+		members := api.Group("/members")
+		{
+			members.POST("", ctrl.CreateMember)
+			members.GET("", ctrl.GetMembers)
+			members.GET("/:id", ctrl.GetMemberByID)
+			members.PUT("/:id", ctrl.UpdateMember)
+			members.DELETE("/:id", ctrl.DeleteMember)
+		}
+
 		// Column routes
 		columns := api.Group("/columns")
 		{

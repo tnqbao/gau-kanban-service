@@ -2,9 +2,32 @@
 -- Enable pgcrypto for UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- Table: boards
+CREATE TABLE IF NOT EXISTS boards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- Table: members
+CREATE TABLE IF NOT EXISTS members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+    member_id UUID NOT NULL,
+    full_name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    UNIQUE(board_id, member_id)
+);
+CREATE INDEX IF NOT EXISTS idx_members_board_id ON members(board_id);
+CREATE INDEX IF NOT EXISTS idx_members_member_id ON members(member_id);
+
 -- Table: columns
 CREATE TABLE IF NOT EXISTS columns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    board_id UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     position SERIAL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),

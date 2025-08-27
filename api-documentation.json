@@ -1,0 +1,1762 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Kanban Service API",
+    "description": "Comprehensive API documentation for the Kanban Service with advanced position management",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Kanban Service Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "/api/v2/kanban",
+      "description": "Kanban API v2"
+    }
+  ],
+  "paths": {
+    "/columns": {
+      "post": {
+        "summary": "Create a new column",
+        "description": "Creates a new kanban column and automatically assigns it the next position",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateColumnRequest"
+              },
+              "example": {
+                "title": "To Do"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Column created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColumnResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "tags": ["Columns"]
+      },
+      "get": {
+        "summary": "Get all columns with tickets",
+        "description": "Retrieves all columns ordered by position, including their tickets with labels, assignees, and metadata",
+        "responses": {
+          "200": {
+            "description": "Columns retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ColumnWithTicketsDTO"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Columns"]
+      }
+    },
+    "/columns/{id}": {
+      "get": {
+        "summary": "Get column by ID",
+        "description": "Retrieves a specific column with all its tickets and details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Column ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Column retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ColumnWithTicketsDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Column not found"
+          }
+        },
+        "tags": ["Columns"]
+      },
+      "put": {
+        "summary": "Update column",
+        "description": "Updates column title and/or position",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateColumnRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Column updated successfully"
+          },
+          "404": {
+            "description": "Column not found"
+          }
+        },
+        "tags": ["Columns"]
+      },
+      "delete": {
+        "summary": "Delete column",
+        "description": "Deletes a column and all its tickets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Column deleted successfully"
+          },
+          "404": {
+            "description": "Column not found"
+          }
+        },
+        "tags": ["Columns"]
+      }
+    },
+    "/columns/{id}/change-position": {
+      "put": {
+        "summary": "Change column position (Advanced)",
+        "description": "Changes column position with smart handling - supports moving to first, last, or any middle position. Automatically shifts other columns.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeColumnPositionRequest"
+              },
+              "examples": {
+                "move_to_first": {
+                  "summary": "Move to first position",
+                  "value": {
+                    "new_position": 1
+                  }
+                },
+                "move_to_middle": {
+                  "summary": "Move to middle position",
+                  "value": {
+                    "new_position": 3
+                  }
+                },
+                "move_to_last": {
+                  "summary": "Move to last position (auto-adjusts)",
+                  "value": {
+                    "new_position": 999
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Column position changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionChangeResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Columns", "Position Management"]
+      }
+    },
+    "/tickets": {
+      "post": {
+        "summary": "Create a new ticket",
+        "description": "Creates a new ticket in a specified column with auto-generated ticket number",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketWithDetailsResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Tickets"]
+      },
+      "get": {
+        "summary": "Get all tickets",
+        "description": "Retrieves all tickets or tickets filtered by column_id",
+        "parameters": [
+          {
+            "name": "column_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter tickets by column ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tickets retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/TicketWithDetailsResponse"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Tickets"]
+      }
+    },
+    "/tickets/{id}": {
+      "get": {
+        "summary": "Get ticket by ID",
+        "description": "Retrieves a specific ticket with all details, assignments, and checklists",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketWithDetailsResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Tickets"]
+      },
+      "put": {
+        "summary": "Update ticket",
+        "description": "Updates ticket details, assignments, and checklists",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket updated successfully"
+          }
+        },
+        "tags": ["Tickets"]
+      },
+      "delete": {
+        "summary": "Delete ticket",
+        "description": "Deletes a ticket and all related assignments and checklists",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket deleted successfully"
+          }
+        },
+        "tags": ["Tickets"]
+      }
+    },
+    "/tickets/{id}/change-position": {
+      "put": {
+        "summary": "Change ticket position (Advanced)",
+        "description": "Changes ticket position with advanced handling - supports moving within same column or between different columns. Handles first, last, and middle positions automatically.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeTicketPositionRequest"
+              },
+              "examples": {
+                "move_within_column": {
+                  "summary": "Move to top of same column",
+                  "value": {
+                    "new_column_id": "same-column-uuid",
+                    "new_position": 1
+                  }
+                },
+                "move_between_columns": {
+                  "summary": "Move to different column",
+                  "value": {
+                    "new_column_id": "different-column-uuid",
+                    "new_position": 2
+                  }
+                },
+                "move_to_end": {
+                  "summary": "Move to end of column",
+                  "value": {
+                    "new_column_id": "target-column-uuid",
+                    "new_position": 999
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket position changed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPositionChangeResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Tickets", "Position Management"]
+      }
+    },
+    "/tickets/{id}/position": {
+      "put": {
+        "summary": "Update ticket position (Legacy)",
+        "description": "Legacy method to update ticket position",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTicketPositionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket position updated successfully"
+          }
+        },
+        "tags": ["Tickets"]
+      }
+    },
+    "/tickets/move": {
+      "put": {
+        "summary": "Move ticket to column",
+        "description": "Moves ticket to end of specified column",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveTicketRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket moved successfully"
+          }
+        },
+        "tags": ["Tickets"]
+      }
+    },
+    "/tickets/move-with-position": {
+      "put": {
+        "summary": "Move ticket to column with specific position",
+        "description": "Moves ticket to specified column and position",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveTicketWithPositionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket moved with position successfully"
+          }
+        },
+        "tags": ["Tickets"]
+      }
+    },
+    "/assignments": {
+      "post": {
+        "summary": "Create assignment",
+        "description": "Assigns a user to a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment created successfully"
+          }
+        },
+        "tags": ["Assignments"]
+      }
+    },
+    "/assignments/ticket/{ticket_id}": {
+      "get": {
+        "summary": "Get ticket assignments",
+        "description": "Retrieves all assignments for a specific ticket",
+        "parameters": [
+          {
+            "name": "ticket_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignments retrieved successfully"
+          }
+        },
+        "tags": ["Assignments"]
+      }
+    },
+    "/assignments/{id}": {
+      "put": {
+        "summary": "Update assignment",
+        "description": "Updates assignment details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssignmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignment updated successfully"
+          }
+        },
+        "tags": ["Assignments"]
+      },
+      "delete": {
+        "summary": "Delete assignment",
+        "description": "Removes an assignment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment deleted successfully"
+          }
+        },
+        "tags": ["Assignments"]
+      }
+    },
+    "/assignments/user/{user_id}": {
+      "delete": {
+        "summary": "Delete assignments by user",
+        "description": "Removes all assignments for a specific user",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User assignments deleted successfully"
+          }
+        },
+        "tags": ["Assignments"]
+      }
+    },
+    "/checklists": {
+      "post": {
+        "summary": "Create checklist item",
+        "description": "Creates a new checklist item for a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChecklistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist created successfully"
+          }
+        },
+        "tags": ["Checklists"]
+      }
+    },
+    "/checklists/ticket/{ticketId}": {
+      "get": {
+        "summary": "Get ticket checklists",
+        "description": "Retrieves all checklist items for a specific ticket",
+        "parameters": [
+          {
+            "name": "ticketId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checklists retrieved successfully"
+          }
+        },
+        "tags": ["Checklists"]
+      }
+    },
+    "/checklists/{id}": {
+      "put": {
+        "summary": "Update checklist item",
+        "description": "Updates checklist item details",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist updated successfully"
+          }
+        },
+        "tags": ["Checklists"]
+      },
+      "delete": {
+        "summary": "Delete checklist item",
+        "description": "Removes a checklist item",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checklist deleted successfully"
+          }
+        },
+        "tags": ["Checklists"]
+      }
+    },
+    "/checklists/{id}/position": {
+      "put": {
+        "summary": "Update checklist position",
+        "description": "Updates the position of a checklist item",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChecklistPositionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist position updated successfully"
+          }
+        },
+        "tags": ["Checklists"]
+      }
+    },
+    "/boards": {
+      "post": {
+        "summary": "Create a new board",
+        "description": "Creates a new board for organizing columns and tickets",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBoardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Board created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Boards"]
+      },
+      "get": {
+        "summary": "Get all boards",
+        "description": "Retrieves all boards with their columns and tickets",
+        "responses": {
+          "200": {
+            "description": "Boards retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/BoardWithColumnsAndTicketsDTO"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["Boards"]
+      }
+    },
+    "/boards/{id}": {
+      "get": {
+        "summary": "Get board by ID",
+        "description": "Retrieves a specific board with all its columns and tickets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Board retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardWithColumnsAndTicketsDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Board not found"
+          }
+        },
+        "tags": ["Boards"]
+      },
+      "put": {
+        "summary": "Update board",
+        "description": "Updates board title and/or description",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBoardRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Board updated successfully"
+          },
+          "404": {
+            "description": "Board not found"
+          }
+        },
+        "tags": ["Boards"]
+      },
+      "delete": {
+        "summary": "Delete board",
+        "description": "Deletes a board and all its columns and tickets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Board deleted successfully"
+          },
+          "404": {
+            "description": "Board not found"
+          }
+        },
+        "tags": ["Boards"]
+      }
+    },
+    "/members": {
+      "post": {
+        "summary": "Add a member to a board",
+        "description": "Assigns a user as a member to a board",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member added successfully"
+          }
+        },
+        "tags": ["Members"]
+      }
+    },
+    "/members/{id}": {
+      "put": {
+        "summary": "Update member details",
+        "description": "Updates the details of a board member",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Member updated successfully"
+          }
+        },
+        "tags": ["Members"]
+      },
+      "delete": {
+        "summary": "Remove member from board",
+        "description": "Deletes a member from the board",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member removed successfully"
+          }
+        },
+        "tags": ["Members"]
+      }
+    },
+    "/members/board/{board_id}": {
+      "get": {
+        "summary": "Get all members of a board",
+        "description": "Retrieves all members assigned to a specific board",
+        "parameters": [
+          {
+            "name": "board_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Members retrieved successfully"
+          }
+        },
+        "tags": ["Members"]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateColumnRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Column title"
+          }
+        }
+      },
+      "UpdateColumnRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Column title"
+          },
+          "position": {
+            "type": "integer",
+            "description": "Column position"
+          }
+        }
+      },
+      "ChangeColumnPositionRequest": {
+        "type": "object",
+        "required": ["new_position"],
+        "properties": {
+          "new_position": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "New position for the column (1-based). Use 1 for first position, or a large number for last position (auto-adjusts)"
+          }
+        }
+      },
+      "ColumnResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ColumnWithTicketsDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketDTO"
+            }
+          }
+        }
+      },
+      "TicketDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabelDTO"
+            }
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssigneeDTO"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommentDTO"
+            }
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateTicketRequest": {
+        "type": "object",
+        "required": ["column_id", "title"],
+        "properties": {
+          "column_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the column where ticket will be created"
+          },
+          "title": {
+            "type": "string",
+            "description": "Ticket title"
+          }
+        }
+      },
+      "UpdateTicketRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateAssignmentInTicket"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateChecklistInTicket"
+            }
+          }
+        }
+      },
+      "ChangeTicketPositionRequest": {
+        "type": "object",
+        "required": ["new_column_id", "new_position"],
+        "properties": {
+          "new_column_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Target column ID (can be same or different column)"
+          },
+          "new_position": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "New position in the target column (1-based). Use 1 for first position, or large number for last position (auto-adjusts)"
+          }
+        }
+      },
+      "UpdateTicketPositionRequest": {
+        "type": "object",
+        "required": ["column_id", "position"],
+        "properties": {
+          "column_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "MoveTicketRequest": {
+        "type": "object",
+        "required": ["ticket_id", "column_id"],
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "column_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "MoveTicketWithPositionRequest": {
+        "type": "object",
+        "required": ["ticket_id", "column_id", "position"],
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "column_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "TicketWithDetailsResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticket_no": {
+            "type": "string",
+            "description": "Auto-generated ticket number (e.g., TASK-0001)"
+          },
+          "column_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssignmentDTO"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistDTO"
+            }
+          }
+        }
+      },
+      "CreateAssignmentRequest": {
+        "type": "object",
+        "required": ["ticket_id", "user_id", "user_full_name"],
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateAssignmentInTicket": {
+        "type": "object",
+        "required": ["user_id", "user_full_name"],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateAssignmentRequest": {
+        "type": "object",
+        "properties": {
+          "user_full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "AssignmentDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AssigneeDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateChecklistRequest": {
+        "type": "object",
+        "required": ["ticket_id", "title"],
+        "properties": {
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateChecklistInTicket": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "UpdateChecklistRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "completed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "position": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "UpdateChecklistPositionRequest": {
+        "type": "object",
+        "required": ["position"],
+        "properties": {
+          "position": {
+            "type": "integer"
+          }
+        }
+      },
+      "ChecklistDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LabelDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string",
+            "description": "Hex color code"
+          }
+        }
+      },
+      "CommentDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PositionChangeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "column_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "old_position": {
+                "type": "integer"
+              },
+              "new_position": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "TicketPositionChangeResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "ticket_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "old_column_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "old_position": {
+                "type": "integer"
+              },
+              "new_column_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "new_position": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "CreateBoardRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Board title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Board description"
+          }
+        }
+      },
+      "UpdateBoardRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Board title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Board description"
+          }
+        }
+      },
+      "BoardResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateMemberRequest": {
+        "type": "object",
+        "required": ["board_id", "member_id", "full_name"],
+        "properties": {
+          "board_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "member_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateMemberRequest": {
+        "type": "object",
+        "properties": {
+          "full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "MemberResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "board_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "member_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Columns",
+      "description": "Column management operations"
+    },
+    {
+      "name": "Tickets",
+      "description": "Ticket management operations"
+    },
+    {
+      "name": "Position Management",
+      "description": "Advanced position change operations for columns and tickets"
+    },
+    {
+      "name": "Assignments",
+      "description": "User assignment operations"
+    },
+    {
+      "name": "Checklists",
+      "description": "Checklist management operations"
+    },
+    {
+      "name": "Boards",
+      "description": "Board management operations"
+    },
+    {
+      "name": "Members",
+      "description": "Board member management operations"
+    }
+  ],
+  "implementation_notes": {
+    "database": {
+      "type": "PostgreSQL",
+      "migration_version": "000001",
+      "auto_increment_fields": [
+        "columns.position (SERIAL)",
+        "tickets.position (manual management)"
+      ]
+    },
+    "position_management": {
+      "columns": {
+        "description": "Columns use SERIAL auto-increment for position. Change position API handles reordering automatically.",
+        "methods": [
+          "PUT /columns/{id}/change-position - Advanced position management"
+        ]
+      },
+      "tickets": {
+        "description": "Tickets support complex position management within columns and between columns.",
+        "methods": [
+          "PUT /tickets/{id}/change-position - Advanced position management (recommended)",
+          "PUT /tickets/{id}/position - Legacy position update",
+          "PUT /tickets/move - Move to end of column",
+          "PUT /tickets/move-with-position - Move with specific position"
+        ]
+      }
+    },
+    "business_logic": {
+      "ticket_creation": "Auto-generates ticket numbers in format TASK-XXXX using sequence",
+      "position_handling": "Automatically handles position gaps and overlaps using database transactions",
+      "data_integrity": "All position changes are transactional to ensure consistency",
+      "logging": "Comprehensive logging on all API endpoints for debugging and monitoring"
+    },
+    "entity_relationships": {
+      "column": "Has many tickets",
+      "ticket": "Belongs to one column, has many assignments and checklists",
+      "assignment": "Links user to ticket",
+      "checklist": "Belongs to ticket with position ordering",
+      "label": "Many-to-many with tickets"
+    },
+    "recommended_usage": {
+      "kanban_board": "Use GET /columns to get full board with tickets",
+      "position_changes": "Use change-position endpoints for drag-and-drop functionality",
+      "ticket_details": "Use GET /tickets/{id} for detailed ticket view",
+      "bulk_updates": "Use PUT /tickets/{id} for updating multiple properties"
+    }
+  }
+}

@@ -4,11 +4,32 @@ import (
 	"github.com/tnqbao/gau-kanban-service/entity"
 )
 
+// BoardRepositoryInterface defines methods for board operations
+type BoardRepositoryInterface interface {
+	CreateBoard(board *entity.Board) error
+	GetAllBoards() ([]entity.Board, error)
+	GetBoardByID(id string) (*entity.Board, error)
+	UpdateBoard(board *entity.Board) error
+	DeleteBoard(id string) error
+}
+
+// MemberRepositoryInterface defines methods for member operations
+type MemberRepositoryInterface interface {
+	CreateMember(member *entity.Member) error
+	GetAllMembers() ([]entity.Member, error)
+	GetMemberByID(id string) (*entity.Member, error)
+	GetMembersByBoardID(boardID string) ([]entity.Member, error)
+	UpdateMember(member *entity.Member) error
+	DeleteMember(id string) error
+	DeleteMembersByBoardID(boardID string) error
+}
+
 // ColumnRepositoryInterface defines methods for column operations
 type ColumnRepositoryInterface interface {
 	Create(column *entity.Column) error
 	GetAll() ([]entity.Column, error)
 	GetByID(id string) (*entity.Column, error)
+	GetByBoardID(boardID string) ([]entity.Column, error)
 	GetColumnById(id string) (*ColumnWithTicketsDTO, error)
 	Update(column *entity.Column) error
 	Delete(id string) error

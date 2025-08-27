@@ -147,3 +147,25 @@ type ChangeTicketPositionRequest struct {
 	NewColumnID string `json:"new_column_id" binding:"required"`
 	NewPosition int    `json:"new_position" binding:"required"`
 }
+
+// Board DTOs
+type CreateBoardRequest struct {
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description"`
+}
+
+type UpdateBoardRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+// Member DTOs
+type CreateMemberRequest struct {
+	BoardID  string `json:"board_id" binding:"required"`
+	MemberID string `json:"member_id" binding:"required"`
+	FullName string `json:"full_name" binding:"required"`
+}
+
+type UpdateMemberRequest struct {
+	FullName string `json:"full_name"`
+}
