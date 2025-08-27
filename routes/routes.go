@@ -14,6 +14,7 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 		panic("Failed to initialize middlewares: " + err.Error())
 	}
 	r.Use(middleware.CORSMiddleware)
+	r.Use(middleware.AuthMiddleware)
 	api := r.Group("/api/v2/kanban")
 	{
 		//api.Use(middleware.CORSMiddleware)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/tnqbao/gau-kanban-service/entity"
 	"github.com/tnqbao/gau-kanban-service/utils"
 )
@@ -20,6 +21,16 @@ func (ctrl *Controller) CreateBoard(c *gin.Context) {
 		return
 	}
 
+	// Extract user ID from JWT context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Create Board] User ID not found in context")
+		utils.JSON401(c, "Authentication required")
+		return
+	}
+
+	userIDStr := userID.(uuid.UUID).String()
+
 	board := &entity.Board{
 		Title:       req.Title,
 		Description: req.Description,
@@ -31,6 +42,23 @@ func (ctrl *Controller) CreateBoard(c *gin.Context) {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Board] Failed to create board")
 		utils.JSON500(c, err.Error())
 		return
+	}
+
+	// Automatically add the creator as a member of the board
+	member := &entity.Member{
+		BoardID:   board.ID,
+		MemberID:  userIDStr,
+		FullName:  "Board Creator", // Default name since full_name is not available in JWT
+		CreatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: time.Now().Format(time.RFC3339),
+	}
+
+	if err := ctrl.Repository.CreateMember(member); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Board] Failed to add creator as member")
+		// Log error but don't fail the board creation
+		ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Create Board] Board created but creator not added as member: %s", board.ID)
+	} else {
+		ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Creator added as member: %s", member.ID)
 	}
 
 	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Board created successfully: %s", board.ID)
