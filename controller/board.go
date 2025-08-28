@@ -48,7 +48,7 @@ func (ctrl *Controller) CreateBoard(c *gin.Context) {
 	member := &entity.Member{
 		BoardID:   board.ID,
 		MemberID:  userIDStr,
-		FullName:  "Board Creator", // Default name since full_name is not available in JWT
+		FullName:  req.FullName, // Use fullname from request instead of "Board Creator"
 		CreatedAt: time.Now().Format(time.RFC3339),
 		UpdatedAt: time.Now().Format(time.RFC3339),
 	}

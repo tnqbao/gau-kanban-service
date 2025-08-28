@@ -163,6 +163,7 @@ type ChangeTicketPositionRequest struct {
 type CreateBoardRequest struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description"`
+	FullName    string `json:"fullname" binding:"required"`
 }
 
 type UpdateBoardRequest struct {
