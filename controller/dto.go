@@ -129,6 +129,7 @@ type TicketWithDetailsResponse struct {
 	UpdatedAt   string          `json:"updated_at"`
 	Assignments []AssignmentDTO `json:"assignments"`
 	Checklists  []ChecklistDTO  `json:"checklists"`
+	Comments    []CommentDTO    `json:"comments"`
 }
 
 type AssignmentDTO struct {
@@ -137,6 +138,15 @@ type AssignmentDTO struct {
 	UserID       string `json:"user_id"`
 	UserFullName string `json:"user_full_name"`
 	AssignedAt   string `json:"assigned_at"`
+}
+
+type CommentDTO struct {
+	ID        string `json:"id"`
+	TicketID  string `json:"ticket_id"`
+	UserID    string `json:"user_id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 // Advanced position change requests

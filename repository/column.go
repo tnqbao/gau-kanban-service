@@ -67,6 +67,28 @@ func (r *Repository) GetColumnById(id string) (*ColumnWithTicketsDTO, error) {
 			assignees = []AssigneeDTO{}
 		}
 
+		// Lấy comments chi tiết
+		var comments []CommentDTO
+		err = r.db.Table("ticket_comments").
+			Select("ticket_comments.id, ticket_comments.user_id, ticket_comments.content, ticket_comments.created_at").
+			Where("ticket_id = ?", ticket.ID).
+			Order("created_at ASC").
+			Scan(&comments).Error
+		if err != nil {
+			comments = []CommentDTO{}
+		}
+
+		// Lấy checklists chi tiết
+		var checklists []ChecklistDTO
+		err = r.db.Table("checklists").
+			Select("checklists.id, checklists.ticket_id, checklists.title, checklists.completed, checklists.position, checklists.created_at, checklists.updated_at").
+			Where("ticket_id = ?", ticket.ID).
+			Order("position ASC, created_at ASC").
+			Scan(&checklists).Error
+		if err != nil {
+			checklists = []ChecklistDTO{}
+		}
+
 		// Xác định completed dựa trên column name
 		completed := column.Title == "DONE" || column.Title == "COMPLETED"
 
@@ -77,7 +99,8 @@ func (r *Repository) GetColumnById(id string) (*ColumnWithTicketsDTO, error) {
 			TicketID:    ticket.ID,
 			Labels:      labels,
 			Assignees:   assignees,
-			Comments:    []CommentDTO{}, // Comments rỗng cho performance
+			Comments:    comments,   // Now includes actual comments data
+			Checklists:  checklists, // Now includes checklist data
 			Completed:   completed,
 			DueDate:     ticket.DueDate,
 			Priority:    ticket.Priority,
@@ -152,6 +175,28 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 				assignees = []AssigneeDTO{}
 			}
 
+			// Lấy comments chi tiết
+			var comments []CommentDTO
+			err = r.db.Table("ticket_comments").
+				Select("ticket_comments.id, ticket_comments.user_id, ticket_comments.content, ticket_comments.created_at").
+				Where("ticket_id = ?", ticket.ID).
+				Order("created_at ASC").
+				Scan(&comments).Error
+			if err != nil {
+				comments = []CommentDTO{}
+			}
+
+			// Lấy checklists chi tiết
+			var checklists []ChecklistDTO
+			err = r.db.Table("checklists").
+				Select("checklists.id, checklists.ticket_id, checklists.title, checklists.completed, checklists.position, checklists.created_at, checklists.updated_at").
+				Where("ticket_id = ?", ticket.ID).
+				Order("position ASC, created_at ASC").
+				Scan(&checklists).Error
+			if err != nil {
+				checklists = []ChecklistDTO{}
+			}
+
 			// Xác định completed
 			completed := column.Title == "DONE" || column.Title == "COMPLETED"
 
@@ -162,7 +207,8 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 				TicketID:    ticket.ID,
 				Labels:      labels,
 				Assignees:   assignees,
-				Comments:    []CommentDTO{}, // Comments rỗng cho performance
+				Comments:    comments,   // Now includes actual comments data
+				Checklists:  checklists, // Now includes checklist data
 				Completed:   completed,
 				DueDate:     ticket.DueDate,
 				Priority:    ticket.Priority,
@@ -242,6 +288,28 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 				assignees = []AssigneeDTO{}
 			}
 
+			// Lấy comments chi tiết
+			var comments []CommentDTO
+			err = r.db.Table("ticket_comments").
+				Select("ticket_comments.id, ticket_comments.user_id, ticket_comments.content, ticket_comments.created_at").
+				Where("ticket_id = ?", ticket.ID).
+				Order("created_at ASC").
+				Scan(&comments).Error
+			if err != nil {
+				comments = []CommentDTO{}
+			}
+
+			// Lấy checklists chi tiết
+			var checklists []ChecklistDTO
+			err = r.db.Table("checklists").
+				Select("checklists.id, checklists.ticket_id, checklists.title, checklists.completed, checklists.position, checklists.created_at, checklists.updated_at").
+				Where("ticket_id = ?", ticket.ID).
+				Order("position ASC, created_at ASC").
+				Scan(&checklists).Error
+			if err != nil {
+				checklists = []ChecklistDTO{}
+			}
+
 			// Xác định completed
 			completed := column.Title == "DONE" || column.Title == "COMPLETED"
 
@@ -252,7 +320,8 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 				TicketID:    ticket.ID,
 				Labels:      labels,
 				Assignees:   assignees,
-				Comments:    []CommentDTO{}, // Comments rỗng cho performance
+				Comments:    comments,   // Now includes actual comments data
+				Checklists:  checklists, // Now includes checklist data
 				Completed:   completed,
 				DueDate:     ticket.DueDate,
 				Priority:    ticket.Priority,

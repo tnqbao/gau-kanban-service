@@ -153,7 +153,7 @@ func (ctrl *Controller) DeleteColumn(c *gin.Context) {
 // GetColumnsByBoardId lấy tất cả columns của một board theo board ID
 func (ctrl *Controller) GetColumnsByBoardId(c *gin.Context) {
 	ctx := c.Request.Context()
-	boardID := c.Param("boardId")
+	boardID := c.Param("id") // Changed from "boardId" to "id" to match new route structure
 	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID] Get columns by board ID request received for board: %s", boardID)
 
 	// Validate that the board exists
@@ -181,7 +181,7 @@ func (ctrl *Controller) GetColumnsByBoardId(c *gin.Context) {
 // GetColumnsByBoardIdWithTickets lấy tất cả columns của một board với tickets
 func (ctrl *Controller) GetColumnsByBoardIdWithTickets(c *gin.Context) {
 	ctx := c.Request.Context()
-	boardID := c.Param("boardId")
+	boardID := c.Param("id") // Changed from "boardId" to "id" to match new route structure
 	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Get Columns By Board ID With Tickets] Get columns with tickets by board ID request received for board: %s", boardID)
 
 	// Validate that the board exists

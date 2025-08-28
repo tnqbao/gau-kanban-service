@@ -4,18 +4,19 @@ package repository
 
 // TicketDTO với đầy đủ thông tin từ các bảng liên quan
 type TicketDTO struct {
-	ID          string        `json:"id"`
-	Title       string        `json:"title"`
-	Description string        `json:"description"`
-	TicketID    string        `json:"ticket_id"`
-	Labels      []LabelDTO    `json:"labels"`    // Thông tin chi tiết labels
-	Assignees   []AssigneeDTO `json:"assignees"` // Thông tin chi tiết assignees
-	Comments    []CommentDTO  `json:"comments"`  // Danh sách comments
-	Completed   bool          `json:"completed"`
-	DueDate     *string       `json:"due_date,omitempty"`
-	Priority    *string       `json:"priority,omitempty"`
-	CreatedAt   string        `json:"created_at"`
-	UpdatedAt   string        `json:"updated_at"`
+	ID          string         `json:"id"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	TicketID    string         `json:"ticket_id"`
+	Labels      []LabelDTO     `json:"labels"`     // Thông tin chi tiết labels
+	Assignees   []AssigneeDTO  `json:"assignees"`  // Thông tin chi tiết assignees
+	Comments    []CommentDTO   `json:"comments"`   // Danh sách comments
+	Checklists  []ChecklistDTO `json:"checklists"` // Danh sách checklists
+	Completed   bool           `json:"completed"`
+	DueDate     *string        `json:"due_date,omitempty"`
+	Priority    *string        `json:"priority,omitempty"`
+	CreatedAt   string         `json:"created_at"`
+	UpdatedAt   string         `json:"updated_at"`
 }
 
 // ColumnWithTicketsDTO cho kanban board
@@ -44,9 +45,21 @@ type LabelDTO struct {
 // CommentDTO chứa thông tin về comment
 type CommentDTO struct {
 	ID        string `json:"id"`
+	TicketID  string `json:"ticket_id"`
 	UserID    string `json:"user_id"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"created_at"`
+}
+
+// ChecklistDTO chứa thông tin về checklist
+type ChecklistDTO struct {
+	ID        string `json:"id"`
+	TicketID  string `json:"ticket_id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
+	Position  int    `json:"position"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 // TicketDetailDTO để lấy thông tin chi tiết một ticket

@@ -194,6 +194,13 @@ func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsRe
 		return nil, err
 	}
 
+	// Lấy comments
+	var comments []entity.TicketComment
+	err = r.db.Where("ticket_id = ?", ticketID).Order("created_at ASC").Find(&comments).Error
+	if err != nil {
+		return nil, err
+	}
+
 	// Chuyển đổi sang DTOs
 	var assignmentDTOs []AssignmentDTO
 	for _, assignment := range assignments {
@@ -219,6 +226,18 @@ func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsRe
 		})
 	}
 
+	var commentDTOs []CommentDTO
+	for _, comment := range comments {
+		commentDTOs = append(commentDTOs, CommentDTO{
+			ID:        comment.ID,
+			TicketID:  comment.TicketID,
+			UserID:    comment.UserID,
+			Content:   comment.Content,
+			CreatedAt: comment.CreatedAt,
+			UpdatedAt: "", // TicketComment entity doesn't have UpdatedAt field
+		})
+	}
+
 	response := &TicketWithDetailsResponse{
 		ID:          ticket.ID,
 		TicketNo:    ticket.TicketNo,
@@ -232,6 +251,7 @@ func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsRe
 		UpdatedAt:   ticket.UpdatedAt,
 		Assignments: assignmentDTOs,
 		Checklists:  checklistDTOs,
+		Comments:    commentDTOs,
 	}
 
 	return response, nil
