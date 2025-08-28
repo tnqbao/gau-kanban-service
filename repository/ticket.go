@@ -234,7 +234,6 @@ func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsRe
 			UserID:    comment.UserID,
 			Content:   comment.Content,
 			CreatedAt: comment.CreatedAt,
-			UpdatedAt: "", // TicketComment entity doesn't have UpdatedAt field
 		})
 	}
 
