@@ -21,10 +21,13 @@ type TicketDTO struct {
 
 // ColumnWithTicketsDTO cho kanban board
 type ColumnWithTicketsDTO struct {
-	ID       string      `json:"id"`
-	Title    string      `json:"title"`
-	Position int         `json:"position"`
-	Tickets  []TicketDTO `json:"tickets"`
+	ID        string      `json:"id"`
+	Title     string      `json:"title"`
+	BoardID   string      `json:"board_id"`
+	Position  int         `json:"position"`
+	Tickets   []TicketDTO `json:"tickets"`
+	CreatedAt string      `json:"created_at"`
+	UpdatedAt string      `json:"updated_at"`
 }
 
 // AssigneeDTO chứa thông tin chi tiết về người được assign

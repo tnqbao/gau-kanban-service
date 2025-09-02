@@ -31,10 +31,13 @@ func (r *Repository) GetColumnById(id string) (*ColumnWithTicketsDTO, error) {
 	}
 
 	columnDTO := ColumnWithTicketsDTO{
-		ID:       column.ID,
-		Title:    column.Title,
-		Position: column.Position,
-		Tickets:  []TicketDTO{},
+		ID:        column.ID,
+		Title:     column.Title,
+		BoardID:   column.BoardID,
+		Position:  column.Position,
+		Tickets:   []TicketDTO{},
+		CreatedAt: column.CreatedAt,
+		UpdatedAt: column.UpdatedAt,
 	}
 
 	// Lấy tickets của column này
@@ -139,10 +142,13 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 	// Duyệt qua từng column và lấy tickets của nó
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
-			ID:       column.ID,
-			Title:    column.Title,
-			Position: column.Position,
-			Tickets:  []TicketDTO{},
+			ID:        column.ID,
+			Title:     column.Title,
+			BoardID:   column.BoardID,
+			Position:  column.Position,
+			Tickets:   []TicketDTO{},
+			CreatedAt: column.CreatedAt,
+			UpdatedAt: column.UpdatedAt,
 		}
 
 		// Lấy tickets của column này
@@ -252,10 +258,13 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 	// Duyệt qua từng column và lấy tickets của nó
 	for _, column := range columns {
 		columnDTO := ColumnWithTicketsDTO{
-			ID:       column.ID,
-			Title:    column.Title,
-			Position: column.Position,
-			Tickets:  []TicketDTO{},
+			ID:        column.ID,
+			Title:     column.Title,
+			BoardID:   column.BoardID,
+			Position:  column.Position,
+			Tickets:   []TicketDTO{},
+			CreatedAt: column.CreatedAt,
+			UpdatedAt: column.UpdatedAt,
 		}
 
 		// Lấy tickets của column này

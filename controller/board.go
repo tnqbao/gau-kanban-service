@@ -61,10 +61,51 @@ func (ctrl *Controller) CreateBoard(c *gin.Context) {
 		ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Creator added as member: %s", member.ID)
 	}
 
-	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Board created successfully: %s", board.ID)
+	// Create default columns for the new board
+	defaultColumns := []struct {
+		Title    string
+		Position int
+	}{
+		{"To Do", 1},
+		{"In Progress", 2},
+		{"Review", 3},
+		{"Done", 4},
+	}
+
+	var createdColumns []entity.Column
+	for _, colData := range defaultColumns {
+		column := &entity.Column{
+			BoardID:   board.ID,
+			Title:     colData.Title,
+			Position:  colData.Position,
+			CreatedAt: time.Now().Format(time.RFC3339),
+			UpdatedAt: time.Now().Format(time.RFC3339),
+		}
+
+		if err := ctrl.Repository.Create(column); err != nil {
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Board] Failed to create default column: %s", colData.Title)
+			// Continue creating other columns even if one fails
+			continue
+		}
+
+		createdColumns = append(createdColumns, *column)
+		ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Default column created: %s", column.Title)
+	}
+
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Board] Board created successfully with %d default columns: %s", len(createdColumns), board.ID)
+
+	// Return board with columns information
+	response := struct {
+		*entity.Board
+		ColumnsCreated int `json:"columns_created"`
+	}{
+		Board:          board,
+		ColumnsCreated: len(createdColumns),
+	}
+
 	utils.JSON200(c, gin.H{
 		"message": "Board created successfully",
-		"data":    board,
+		"data":    response,
 	})
 }
 

@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Kanban Service API",
-    "description": "Comprehensive API documentation for the Kanban Service",
-    "version": "2.0.0",
+    "description": "Clean API documentation for the Kanban Service - matches actual implementation",
+    "version": "2.1.0",
     "contact": {
       "name": "Kanban Service Team",
       "email": "support@kanban.com"
@@ -41,7 +41,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -63,18 +63,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/BoardResponse"
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -103,7 +92,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BoardResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -241,10 +230,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ColumnResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -273,10 +259,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ColumnWithTicketsResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -304,7 +287,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MemberResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -320,10 +303,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/MemberResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -352,7 +332,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MemberResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -430,7 +410,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ColumnResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -446,10 +426,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ColumnResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -478,7 +455,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ColumnResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -556,7 +533,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChangePositionRequest"
+                "$ref": "#/components/schemas/ChangeColumnPositionRequest"
               }
             }
           }
@@ -588,7 +565,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TicketResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -604,10 +581,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TicketResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -636,10 +610,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TicketResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -673,10 +644,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TicketResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -686,7 +654,7 @@
     },
     "/tickets/{id}": {
       "get": {
-        "summary": "Get ticket by ID",
+        "summary": "Get ticket by ID with full details",
         "tags": ["Tickets"],
         "parameters": [
           {
@@ -705,7 +673,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TicketResponse"
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -765,7 +733,7 @@
     },
     "/tickets/{id}/change-position": {
       "put": {
-        "summary": "Change ticket position",
+        "summary": "Change ticket position within same column or move to different column",
         "tags": ["Tickets"],
         "parameters": [
           {
@@ -783,7 +751,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChangePositionRequest"
+                "$ref": "#/components/schemas/ChangeTicketPositionRequest"
               }
             }
           }
@@ -797,7 +765,7 @@
     },
     "/tickets/move-with-position": {
       "put": {
-        "summary": "Move ticket with position",
+        "summary": "Move ticket to specific column and position",
         "tags": ["Tickets"],
         "requestBody": {
           "required": true,
@@ -858,10 +826,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AssignmentResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -985,10 +950,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ChecklistResponse"
-                  }
+                  "$ref": "#/components/schemas/ApiResponse"
                 }
               }
             }
@@ -1068,7 +1030,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdatePositionRequest"
+                "$ref": "#/components/schemas/UpdateChecklistPositionRequest"
               }
             }
           }
@@ -1090,9 +1052,20 @@
       }
     },
     "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
       "CreateBoardRequest": {
         "type": "object",
-        "required": ["title"],
+        "required": ["title", "fullname"],
         "properties": {
           "title": {
             "type": "string",
@@ -1101,6 +1074,10 @@
           "description": {
             "type": "string",
             "description": "Board description"
+          },
+          "fullname": {
+            "type": "string",
+            "description": "Full name of the board creator"
           }
         }
       },
@@ -1115,84 +1092,28 @@
           }
         }
       },
-      "BoardResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "is_archived": {
-            "type": "boolean"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
       "CreateMemberRequest": {
         "type": "object",
-        "required": ["user_id", "board_id"],
+        "required": ["board_id", "member_id", "full_name"],
         "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid"
-          },
           "board_id": {
             "type": "string",
             "format": "uuid"
           },
-          "role": {
+          "member_id": {
             "type": "string",
-            "enum": ["admin", "member", "viewer"]
+            "format": "uuid"
+          },
+          "full_name": {
+            "type": "string"
           }
         }
       },
       "UpdateMemberRequest": {
         "type": "object",
         "properties": {
-          "role": {
-            "type": "string",
-            "enum": ["admin", "member", "viewer"]
-          }
-        }
-      },
-      "MemberResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "user_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "board_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "role": {
+          "full_name": {
             "type": "string"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
@@ -1214,76 +1135,32 @@
         "properties": {
           "title": {
             "type": "string"
-          }
-        }
-      },
-      "ColumnResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string"
-          },
-          "board_id": {
-            "type": "string",
-            "format": "uuid"
           },
           "position": {
             "type": "integer"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
           }
         }
       },
-      "ColumnWithTicketsResponse": {
+      "ChangeColumnPositionRequest": {
         "type": "object",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ColumnResponse"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "tickets": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/TicketResponse"
-                }
-              }
-            }
+        "required": ["new_position"],
+        "properties": {
+          "new_position": {
+            "type": "integer",
+            "minimum": 1
           }
-        ]
+        }
       },
       "CreateTicketRequest": {
         "type": "object",
-        "required": ["title", "column_id"],
+        "required": ["column_id", "title"],
         "properties": {
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
           "column_id": {
             "type": "string",
             "format": "uuid"
           },
-          "priority": {
-            "type": "string",
-            "enum": ["low", "medium", "high", "urgent"]
-          },
-          "due_date": {
-            "type": "string",
-            "format": "date-time"
+          "title": {
+            "type": "string"
           }
         }
       },
@@ -1296,60 +1173,60 @@
           "description": {
             "type": "string"
           },
-          "priority": {
-            "type": "string",
-            "enum": ["low", "medium", "high", "urgent"]
-          },
           "due_date": {
-            "type": "string",
-            "format": "date-time"
+            "type": "string"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateAssignmentInTicket"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CreateChecklistInTicket"
+            }
           }
         }
       },
-      "TicketResponse": {
+      "CreateAssignmentInTicket": {
         "type": "object",
+        "required": ["user_id", "user_full_name"],
         "properties": {
-          "id": {
+          "user_id": {
             "type": "string",
             "format": "uuid"
           },
-          "ticket_no": {
+          "user_full_name": {
             "type": "string"
-          },
+          }
+        }
+      },
+      "CreateChecklistInTicket": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
           "title": {
             "type": "string"
           },
-          "description": {
-            "type": "string"
-          },
-          "column_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "position": {
-            "type": "integer"
-          },
-          "priority": {
-            "type": "string"
-          },
-          "due_date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
+          "completed": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
-      "ChangePositionRequest": {
+      "ChangeTicketPositionRequest": {
         "type": "object",
-        "required": ["new_position"],
+        "required": ["new_column_id", "new_position"],
         "properties": {
+          "new_column_id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "new_position": {
             "type": "integer",
             "minimum": 1
@@ -1358,17 +1235,17 @@
       },
       "MoveTicketWithPositionRequest": {
         "type": "object",
-        "required": ["ticket_id", "target_column_id", "new_position"],
+        "required": ["ticket_id", "column_id", "position"],
         "properties": {
           "ticket_id": {
             "type": "string",
             "format": "uuid"
           },
-          "target_column_id": {
+          "column_id": {
             "type": "string",
             "format": "uuid"
           },
-          "new_position": {
+          "position": {
             "type": "integer",
             "minimum": 1
           }
@@ -1376,7 +1253,7 @@
       },
       "CreateAssignmentRequest": {
         "type": "object",
-        "required": ["ticket_id", "user_id"],
+        "required": ["ticket_id", "user_id", "user_full_name"],
         "properties": {
           "ticket_id": {
             "type": "string",
@@ -1385,36 +1262,17 @@
           "user_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
           }
         }
       },
       "UpdateAssignmentRequest": {
         "type": "object",
         "properties": {
-          "user_id": {
-            "type": "string",
-            "format": "uuid"
-          }
-        }
-      },
-      "AssignmentResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "ticket_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "user_id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assigned_at": {
-            "type": "string",
-            "format": "date-time"
+          "user_full_name": {
+            "type": "string"
           }
         }
       },
@@ -1439,10 +1297,141 @@
           },
           "completed": {
             "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
           }
         }
       },
-      "ChecklistResponse": {
+      "UpdateChecklistPositionRequest": {
+        "type": "object",
+        "required": ["position"],
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "TicketDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "ticket_id": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabelDTO"
+            }
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssigneeDTO"
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommentDTO"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistDTO"
+            }
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "due_date": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LabelDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        }
+      },
+      "AssigneeDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_full_name": {
+            "type": "string"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CommentDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ChecklistDTO": {
         "type": "object",
         "properties": {
           "id": {
@@ -1471,18 +1460,7 @@
             "format": "date-time"
           }
         }
-      },
-      "UpdatePositionRequest": {
-        "type": "object",
-        "required": ["position"],
-        "properties": {
-          "position": {
-            "type": "integer",
-            "minimum": 1
-          }
-        }
       }
     }
   }
 }
-
