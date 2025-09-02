@@ -17,7 +17,6 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 	r.Use(middleware.AuthMiddleware)
 	api := r.Group("/api/v2/kanban")
 	{
-		//api.Use(middleware.CORSMiddleware)
 		// Board routes
 		boards := api.Group("/boards")
 		{
@@ -29,7 +28,7 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			boards.PUT("/:id/archive", ctrl.ArchiveBoard)
 			boards.PUT("/:id/restore", ctrl.RestoreBoard)
 
-			// Board-specific column routes (nested under boards to avoid conflicts)
+			// Board-specific column routes
 			boards.GET("/:id/columns", ctrl.GetColumnsByBoardId)
 			boards.GET("/:id/columns/with-tickets", ctrl.GetColumnsByBoardIdWithTickets)
 		}
@@ -66,10 +65,8 @@ func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
 			tickets.PUT("/:id", ctrl.UpdateTicket)
 			tickets.DELETE("/:id", ctrl.DeleteTicket)
 
-			// Position and movement operations
-			tickets.PUT("/:id/position", ctrl.UpdateTicketPosition)
+			// Unified position and movement operations
 			tickets.PUT("/:id/change-position", ctrl.ChangeTicketPosition)
-			tickets.PUT("/move", ctrl.MoveTicketToColumn)
 			tickets.PUT("/move-with-position", ctrl.MoveTicketWithPosition)
 		}
 
