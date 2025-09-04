@@ -2,43 +2,30 @@ package repository
 
 import (
 	"fmt"
+
 	"github.com/tnqbao/gau-kanban-service/entity"
 )
 
-// GenerateTicketNumber tạo ticket number theo format TASK-XXXX
-func (r *Repository) GenerateTicketNumber() (string, error) {
-	var nextVal int
-	err := r.db.Raw("SELECT nextval('ticket_number_seq')").Scan(&nextVal).Error
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("TASK-%04d", nextVal), nil
-}
-
+// Ticket methods
 func (r *Repository) CreateTicket(ticket *entity.Ticket) error {
-	// Generate ticket number nếu chưa có
-	if ticket.TicketNo == "" {
-		ticketNo, err := r.GenerateTicketNumber()
-		if err != nil {
-			return err
-		}
-		ticket.TicketNo = ticketNo
-	}
-
-	// Nếu position chưa được set, đặt ticket ở cuối column
-	if ticket.Position == 0 {
-		maxPosition, err := r.GetMaxTicketPositionInColumn(ticket.ColumnID)
-		if err != nil {
-			return err
-		}
-		ticket.Position = maxPosition + 1
-	}
+	// Generate ticket number
+	var count int64
+	r.db.Model(&entity.Ticket{}).Count(&count)
+	ticket.TicketNumber = fmt.Sprintf("#%06d", count+1)
 
 	return r.db.Create(ticket).Error
 }
 
-// GetMaxTicketPositionInColumn lấy position cao nhất trong column
-func (r *Repository) GetMaxTicketPositionInColumn(columnID string) (int, error) {
+func (r *Repository) GenerateNextTicketNumber() (string, error) {
+	var count int64
+	err := r.db.Model(&entity.Ticket{}).Count(&count).Error
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("#%06d", count+1), nil
+}
+
+func (r *Repository) GetMaxOrderByColumnID(columnID string) (int, error) {
 	var maxPosition int
 	err := r.db.Model(&entity.Ticket{}).
 		Where("column_id = ?", columnID).
@@ -47,27 +34,28 @@ func (r *Repository) GetMaxTicketPositionInColumn(columnID string) (int, error) 
 	return maxPosition, err
 }
 
-func (r *Repository) GetAllTickets() ([]entity.Ticket, error) {
-	var tickets []entity.Ticket
-	err := r.db.Order("position ASC, created_at DESC").Find(&tickets).Error
-	return tickets, err
+func (r *Repository) GetTicketByID(id string) (*entity.Ticket, error) {
+	var ticket entity.Ticket
+	err := r.db.Where("id = ?", id).
+		Preload("Assignees").
+		Preload("Labels").
+		Preload("Checklists").
+		First(&ticket).Error
+	if err != nil {
+		return nil, err
+	}
+	return &ticket, nil
 }
 
 func (r *Repository) GetTicketsByColumnID(columnID string) ([]entity.Ticket, error) {
 	var tickets []entity.Ticket
 	err := r.db.Where("column_id = ?", columnID).
-		Order("position ASC, created_at DESC").
+		Order("position ASC").
+		Preload("Assignees").
+		Preload("Labels").
+		Preload("Checklists").
 		Find(&tickets).Error
 	return tickets, err
-}
-
-func (r *Repository) GetTicketByID(id string) (*entity.Ticket, error) {
-	var ticket entity.Ticket
-	err := r.db.First(&ticket, "id = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &ticket, nil
 }
 
 func (r *Repository) UpdateTicket(ticket *entity.Ticket) error {
@@ -75,329 +63,104 @@ func (r *Repository) UpdateTicket(ticket *entity.Ticket) error {
 }
 
 func (r *Repository) DeleteTicket(id string) error {
-	// Xóa các assignments và checklists liên quan trước
-	if err := r.DeleteAssignmentsByTicketID(id); err != nil {
-		return err
-	}
-	if err := r.DeleteChecklistsByTicketID(id); err != nil {
-		return err
-	}
-
 	return r.db.Delete(&entity.Ticket{}, "id = ?", id).Error
 }
 
-// UpdateTicketPosition cập nhật vị trí ticket trong column
-func (r *Repository) UpdateTicketPosition(ticketID, columnID string, newPosition int) error {
-	tx := r.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	// Lấy ticket hiện tại
-	var currentTicket entity.Ticket
-	if err := tx.First(&currentTicket, "id = ?", ticketID).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	oldPosition := currentTicket.Position
-	oldColumnID := currentTicket.ColumnID
-
-	// Nếu di chuyển trong cùng column
-	if oldColumnID == columnID {
-		if oldPosition == newPosition {
-			tx.Commit()
-			return nil // Không có thay đổi
-		}
-
-		if oldPosition < newPosition {
-			// Di chuyển xuống: giảm position của các ticket từ oldPosition+1 đến newPosition
-			if err := tx.Model(&entity.Ticket{}).
-				Where("column_id = ? AND position > ? AND position <= ?", columnID, oldPosition, newPosition).
-				Update("position", r.db.Raw("position - 1")).Error; err != nil {
-				tx.Rollback()
-				return err
-			}
-		} else {
-			// Di chuyển lên: tăng position của các ticket từ newPosition đến oldPosition-1
-			if err := tx.Model(&entity.Ticket{}).
-				Where("column_id = ? AND position >= ? AND position < ?", columnID, newPosition, oldPosition).
-				Update("position", r.db.Raw("position + 1")).Error; err != nil {
-				tx.Rollback()
-				return err
-			}
-		}
-	} else {
-		// Di chuyển sang column khác
-		// Giảm position của các ticket sau vị trí cũ trong column cũ
-		if err := tx.Model(&entity.Ticket{}).
-			Where("column_id = ? AND position > ?", oldColumnID, oldPosition).
-			Update("position", r.db.Raw("position - 1")).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		// Tăng position của các ticket từ newPosition trở đi trong column mới
-		if err := tx.Model(&entity.Ticket{}).
-			Where("column_id = ? AND position >= ?", columnID, newPosition).
-			Update("position", r.db.Raw("position + 1")).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	// Cập nhật ticket hiện tại
-	if err := tx.Model(&currentTicket).Updates(map[string]interface{}{
-		"column_id": columnID,
-		"position":  newPosition,
-	}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit().Error
+func (r *Repository) GetNextTicketPosition(columnID string) (int, error) {
+	var maxPosition int
+	err := r.db.Model(&entity.Ticket{}).
+		Where("column_id = ?", columnID).
+		Select("COALESCE(MAX(position), 0) + 1").
+		Scan(&maxPosition).Error
+	return maxPosition, err
 }
 
-// MoveTicketToColumn di chuyển ticket sang column khác (đặt ở cuối)
-func (r *Repository) MoveTicketToColumn(ticketID, columnID string) error {
-	maxPosition, err := r.GetMaxTicketPositionInColumn(columnID)
-	if err != nil {
-		return err
-	}
-	return r.UpdateTicketPosition(ticketID, columnID, maxPosition+1)
+func (r *Repository) GetMinPositionByColumnID(columnID string) (int, error) {
+	var minPosition int
+	err := r.db.Model(&entity.Ticket{}).
+		Where("column_id = ?", columnID).
+		Select("COALESCE(MIN(position), 0)").
+		Scan(&minPosition).Error
+	return minPosition, err
 }
 
-// MoveTicketToColumnWithPosition di chuyển ticket sang column khác với position cụ thể
-func (r *Repository) MoveTicketToColumnWithPosition(ticketID, columnID string, position int) error {
-	return r.UpdateTicketPosition(ticketID, columnID, position)
+func (r *Repository) GetMaxPositionByColumnID(columnID string) (int, error) {
+	var maxPosition int
+	err := r.db.Model(&entity.Ticket{}).
+		Where("column_id = ?", columnID).
+		Select("COALESCE(MAX(position), 0)").
+		Scan(&maxPosition).Error
+	return maxPosition, err
 }
 
-// GetTicketWithDetails lấy ticket kèm assignments và checklists
-func (r *Repository) GetTicketWithDetails(ticketID string) (*TicketWithDetailsResponse, error) {
-	// Lấy ticket
-	ticket, err := r.GetTicketByID(ticketID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lấy assignments
-	assignments, err := r.GetAssignmentsByTicketID(ticketID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lấy checklists
-	checklists, err := r.GetChecklistsByTicketID(ticketID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Lấy comments
-	var comments []entity.TicketComment
-	err = r.db.Where("ticket_id = ?", ticketID).Order("created_at ASC").Find(&comments).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// Chuyển đổi sang DTOs
-	var assignmentDTOs []AssignmentDTO
-	for _, assignment := range assignments {
-		assignmentDTOs = append(assignmentDTOs, AssignmentDTO{
-			ID:           assignment.ID,
-			TicketID:     assignment.TicketID,
-			UserID:       assignment.UserID,
-			UserFullName: assignment.UserFullName,
-			AssignedAt:   assignment.AssignedAt,
-		})
-	}
-
-	var checklistDTOs []ChecklistDTO
-	for _, checklist := range checklists {
-		checklistDTOs = append(checklistDTOs, ChecklistDTO{
-			ID:        checklist.ID,
-			TicketID:  checklist.TicketID,
-			Title:     checklist.Title,
-			Completed: checklist.Completed,
-			Position:  checklist.Position,
-			CreatedAt: checklist.CreatedAt,
-			UpdatedAt: checklist.UpdatedAt,
-		})
-	}
-
-	var commentDTOs []CommentDTO
-	for _, comment := range comments {
-		commentDTOs = append(commentDTOs, CommentDTO{
-			ID:        comment.ID,
-			TicketID:  comment.TicketID,
-			UserID:    comment.UserID,
-			Content:   comment.Content,
-			CreatedAt: comment.CreatedAt,
-		})
-	}
-
-	response := &TicketWithDetailsResponse{
-		ID:          ticket.ID,
-		TicketNo:    ticket.TicketNo,
-		ColumnID:    ticket.ColumnID,
-		Title:       ticket.Title,
-		Description: ticket.Description,
-		DueDate:     ticket.DueDate,
-		Priority:    ticket.Priority,
-		Position:    ticket.Position,
-		CreatedAt:   ticket.CreatedAt,
-		UpdatedAt:   ticket.UpdatedAt,
-		Assignments: assignmentDTOs,
-		Checklists:  checklistDTOs,
-		Comments:    commentDTOs,
-	}
-
-	return response, nil
+func (r *Repository) GetNextPositionAfter(columnID string, position int) (int, error) {
+	var nextPosition int
+	err := r.db.Model(&entity.Ticket{}).
+		Where("column_id = ? AND position > ?", columnID, position).
+		Select("MIN(position)").
+		Scan(&nextPosition).Error
+	return nextPosition, err
 }
 
-// ChangeTicketPosition changes ticket position with advanced handling (within same column or between columns)
-func (r *Repository) ChangeTicketPosition(ticketID string, newColumnID string, newPosition int) error {
-	// Get current ticket info
-	var currentTicket entity.Ticket
-	if err := r.db.Where("id = ?", ticketID).First(&currentTicket).Error; err != nil {
-		return err
-	}
-
-	currentColumnID := currentTicket.ColumnID
-	currentPosition := currentTicket.Position
-
-	// Start transaction
-	tx := r.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
-
-	if tx.Error != nil {
-		return tx.Error
-	}
-
-	if currentColumnID == newColumnID {
-		// Moving within the same column
-		if currentPosition == newPosition {
-			// No change needed
-			return tx.Commit().Error
-		}
-
-		if newPosition < currentPosition {
-			// Moving up (decrease position number)
-			// Shift other tickets down (increase their position)
-			if err := tx.Model(&entity.Ticket{}).
-				Where("column_id = ? AND position >= ? AND position < ? AND id != ?",
-					newColumnID, newPosition, currentPosition, ticketID).
-				Update("position", r.db.Raw("position + 1")).Error; err != nil {
-				tx.Rollback()
-				return err
-			}
-		} else {
-			// Moving down (increase position number)
-			// Shift other tickets up (decrease their position)
-			if err := tx.Model(&entity.Ticket{}).
-				Where("column_id = ? AND position > ? AND position <= ? AND id != ?",
-					newColumnID, currentPosition, newPosition, ticketID).
-				Update("position", r.db.Raw("position - 1")).Error; err != nil {
-				tx.Rollback()
-				return err
-			}
-		}
-
-		// Update current ticket position
-		if err := tx.Model(&entity.Ticket{}).
-			Where("id = ?", ticketID).
-			Update("position", newPosition).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-	} else {
-		// Moving between different columns
-
-		// 1. Shift tickets in old column to fill the gap
-		if err := tx.Model(&entity.Ticket{}).
-			Where("column_id = ? AND position > ?", currentColumnID, currentPosition).
-			Update("position", r.db.Raw("position - 1")).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		// 2. Make space in new column by shifting tickets down
-		if err := tx.Model(&entity.Ticket{}).
-			Where("column_id = ? AND position >= ?", newColumnID, newPosition).
-			Update("position", r.db.Raw("position + 1")).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		// 3. Update current ticket with new column and position
-		if err := tx.Model(&entity.Ticket{}).
-			Where("id = ?", ticketID).
-			Updates(map[string]interface{}{
-				"column_id": newColumnID,
-				"position":  newPosition,
-			}).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-
-	return tx.Commit().Error
+func (r *Repository) GetPreviousPositionBefore(columnID string, position int) (int, error) {
+	var prevPosition int
+	err := r.db.Model(&entity.Ticket{}).
+		Where("column_id = ? AND position < ?", columnID, position).
+		Select("MAX(position)").
+		Scan(&prevPosition).Error
+	return prevPosition, err
 }
 
-// SearchTickets performs fuzzy search on tickets by title and ticket number
-func (r *Repository) SearchTickets(query string, boardID string) ([]entity.Ticket, error) {
+func (r *Repository) SearchTicketsByColumnAndTitle(columnID string, searchTerm string) ([]entity.Ticket, error) {
 	var tickets []entity.Ticket
+	query := r.db.Where("column_id = ?", columnID)
 
-	// Build the search query
-	searchQuery := r.db.Where("title ILIKE ? OR ticket_no ILIKE ?", "%"+query+"%", "%"+query+"%")
-
-	// Add board filter if provided
-	if boardID != "" {
-		searchQuery = searchQuery.Joins("JOIN columns ON tickets.column_id = columns.id").
-			Where("columns.board_id = ?", boardID)
+	if searchTerm != "" {
+		// Search in title and ticket_number (case-insensitive)
+		query = query.Where("LOWER(title) LIKE LOWER(?) OR LOWER(ticket_number) LIKE LOWER(?)",
+			"%"+searchTerm+"%", "%"+searchTerm+"%")
 	}
 
-	err := searchQuery.Order("created_at DESC").Find(&tickets).Error
+	err := query.Order("position ASC").
+		Preload("Assignees").
+		Preload("Labels").
+		Preload("Checklists").
+		Find(&tickets).Error
 	return tickets, err
 }
 
-// FilterTickets filters tickets by label, assignee, and status
-func (r *Repository) FilterTickets(labelID, assigneeID, status, boardID string) ([]entity.Ticket, error) {
+func (r *Repository) FilterTicketsByColumn(columnID string, assigneeID string, labelID string, status string) ([]entity.Ticket, error) {
 	var tickets []entity.Ticket
+	query := r.db.Where("column_id = ?", columnID)
 
-	query := r.db.Table("tickets")
-
-	// Join with columns for board filtering
-	if boardID != "" {
-		query = query.Joins("JOIN columns ON tickets.column_id = columns.id").
-			Where("columns.board_id = ?", boardID)
-	}
-
-	// Filter by label
-	if labelID != "" {
-		query = query.Joins("JOIN ticket_labels ON tickets.id = ticket_labels.ticket_id").
-			Where("ticket_labels.label_id = ?", labelID)
-	}
-
-	// Filter by assignee
-	if assigneeID != "" {
-		query = query.Joins("JOIN task_assignments ON tickets.id = task_assignments.ticket_id").
-			Where("task_assignments.user_id = ?", assigneeID)
-	}
-
-	// Filter by status (column title)
+	// Filter by status if provided
 	if status != "" {
-		if boardID == "" {
-			query = query.Joins("JOIN columns ON tickets.column_id = columns.id")
-		}
-		query = query.Where("LOWER(columns.title) = LOWER(?)", status)
+		query = query.Where("status = ?", status)
 	}
 
-	err := query.Order("tickets.created_at DESC").Find(&tickets).Error
+	// If filtering by assignee, we need to join with ticket_assignees
+	if assigneeID != "" {
+		query = query.Joins("INNER JOIN ticket_assignees ON tickets.id = ticket_assignees.ticket_id").
+			Where("ticket_assignees.member_id = ?", assigneeID)
+	}
+
+	// If filtering by label, we need to join with ticket_labels
+	if labelID != "" {
+		if assigneeID != "" {
+			// Already have a join, add another condition
+			query = query.Joins("INNER JOIN ticket_labels ON tickets.id = ticket_labels.ticket_id").
+				Where("ticket_labels.label_id = ?", labelID)
+		} else {
+			// First join
+			query = query.Joins("INNER JOIN ticket_labels ON tickets.id = ticket_labels.ticket_id").
+				Where("ticket_labels.label_id = ?", labelID)
+		}
+	}
+
+	err := query.Order("position ASC").
+		Preload("Assignees").
+		Preload("Labels").
+		Preload("Checklists").
+		Find(&tickets).Error
 	return tickets, err
 }

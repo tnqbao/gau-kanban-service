@@ -4,14 +4,14 @@ import (
 	"github.com/tnqbao/gau-kanban-service/entity"
 )
 
-// Member repository methods
+// Member methods
 func (r *Repository) CreateMember(member *entity.Member) error {
 	return r.db.Create(member).Error
 }
 
-func (r *Repository) GetAllMembers() ([]entity.Member, error) {
+func (r *Repository) GetMembersByBoardID(boardID string) ([]entity.Member, error) {
 	var members []entity.Member
-	err := r.db.Order("created_at DESC").Find(&members).Error
+	err := r.db.Where("board_id = ?", boardID).Find(&members).Error
 	return members, err
 }
 
@@ -24,20 +24,18 @@ func (r *Repository) GetMemberByID(id string) (*entity.Member, error) {
 	return &member, nil
 }
 
-func (r *Repository) GetMembersByBoardID(boardID string) ([]entity.Member, error) {
-	var members []entity.Member
-	err := r.db.Where("board_id = ?", boardID).Order("full_name ASC").Find(&members).Error
-	return members, err
-}
-
-func (r *Repository) UpdateMember(member *entity.Member) error {
-	return r.db.Save(member).Error
+func (r *Repository) IsMemberOfBoard(userID, boardID string) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Member{}).Where("user_id = ? AND board_id = ?", userID, boardID).Count(&count).Error
+	return count > 0, err
 }
 
 func (r *Repository) DeleteMember(id string) error {
 	return r.db.Delete(&entity.Member{}, "id = ?", id).Error
 }
 
-func (r *Repository) DeleteMembersByBoardID(boardID string) error {
-	return r.db.Where("board_id = ?", boardID).Delete(&entity.Member{}).Error
+func (r *Repository) IsMemberExists(userID, boardID string) (bool, error) {
+	var count int64
+	err := r.db.Model(&entity.Member{}).Where("user_id = ? AND board_id = ?", userID, boardID).Count(&count).Error
+	return count > 0, err
 }

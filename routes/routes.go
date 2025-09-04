@@ -7,88 +7,89 @@ import (
 )
 
 func SetupRoutes(ctrl *controller.Controller) *gin.Engine {
-	r := gin.Default()
+	router := gin.Default()
 
 	middleware, err := middlewares.NewMiddlewares(ctrl)
 	if err != nil {
 		panic("Failed to initialize middlewares: " + err.Error())
 	}
-	r.Use(middleware.CORSMiddleware)
-	r.Use(middleware.AuthMiddleware)
-	api := r.Group("/api/v2/kanban")
+	router.Use(middleware.CORSMiddleware)
+	router.Use(middleware.AuthMiddleware)
+
+	// API version 2
+	v2 := router.Group("/api/v2")
 	{
-		// Board routes
-		boards := api.Group("/boards")
+		// Kanban routes
+		kanban := v2.Group("/kanban")
 		{
-			boards.POST("", ctrl.CreateBoard)
-			boards.GET("", ctrl.GetBoards)
-			boards.GET("/:id", ctrl.GetBoardByID)
-			boards.PUT("/:id", ctrl.UpdateBoard)
-			boards.DELETE("/:id", ctrl.DeleteBoard)
-			boards.PUT("/:id/archive", ctrl.ArchiveBoard)
-			boards.PUT("/:id/restore", ctrl.RestoreBoard)
+			// Board routes
+			boards := kanban.Group("/boards")
+			{
+				boards.POST("", ctrl.CreateBoard)
+				boards.GET("", ctrl.GetBoards)
+				boards.GET("/:id", ctrl.GetBoardByID)
+				boards.GET("/:id/search", ctrl.SearchTickets)
+				boards.GET("/:id/filter", ctrl.FilterTickets)
+				boards.PATCH("/:id", ctrl.UpdateBoard)
+				boards.DELETE("/:id", ctrl.DeleteBoard)
+				boards.PATCH("/:id/archive", ctrl.ArchiveBoard)
+			}
 
-			// Board-specific column routes
-			boards.GET("/:id/columns", ctrl.GetColumnsByBoardId)
-			boards.GET("/:id/columns/with-tickets", ctrl.GetColumnsByBoardIdWithTickets)
-		}
+			// Column routes
+			columns := kanban.Group("/columns")
+			{
+				columns.POST("", ctrl.CreateColumn)
+				columns.GET("/:id", ctrl.GetColumnByID)
+				columns.PATCH("/:id", ctrl.UpdateColumn)
+				columns.DELETE("/:id", ctrl.DeleteColumn)
+				columns.PATCH("/:id/reorder", ctrl.ReorderColumn)
+			}
 
-		// Member routes
-		members := api.Group("/members")
-		{
-			members.POST("", ctrl.CreateMember)
-			members.GET("", ctrl.GetMembers)
-			members.GET("/:id", ctrl.GetMemberByID)
-			members.PUT("/:id", ctrl.UpdateMember)
-			members.DELETE("/:id", ctrl.DeleteMember)
-		}
+			// Ticket routes
+			tickets := kanban.Group("/tickets")
+			{
+				tickets.POST("", ctrl.CreateTicket)
+				tickets.GET("/:id", ctrl.GetTicketByID)
+				tickets.PATCH("/:id", ctrl.UpdateTicket)
+				tickets.PATCH("/:id/move", ctrl.MoveTicket)
+				tickets.DELETE("/:id", ctrl.DeleteTicket)
+			}
 
-		// Column routes
-		columns := api.Group("/columns")
-		{
-			columns.POST("", ctrl.CreateColumn)
-			columns.GET("", ctrl.GetColumns)
-			columns.GET("/:id", ctrl.GetColumnById)
-			columns.PUT("/:id", ctrl.UpdateColumn)
-			columns.DELETE("/:id", ctrl.DeleteColumn)
-			columns.PUT("/:id/change-position", ctrl.ChangeColumnPosition)
-		}
+			// User routes
+			users := kanban.Group("/users")
+			{
+				users.POST("", ctrl.CreateUser)
+			}
 
-		// Ticket routes
-		tickets := api.Group("/tickets")
-		{
-			tickets.POST("", ctrl.CreateTicket)
-			tickets.GET("", ctrl.GetTickets)
-			tickets.GET("/search", ctrl.SearchTickets)
-			tickets.GET("/filter", ctrl.FilterTickets)
-			tickets.GET("/:id", ctrl.GetTicketByID)
-			tickets.PUT("/:id", ctrl.UpdateTicket)
-			tickets.DELETE("/:id", ctrl.DeleteTicket)
+			// Member routes
+			members := kanban.Group("/members")
+			{
+				members.POST("", ctrl.AddMemberToBoard)
+			}
 
-			// Unified position and movement operations
-			tickets.PUT("/:id/change-position", ctrl.ChangeTicketPosition)
-			tickets.PUT("/move-with-position", ctrl.MoveTicketWithPosition)
-		}
+			// Label routes
+			labels := kanban.Group("/labels")
+			{
+				labels.POST("", ctrl.CreateLabel)
+				labels.POST("/assign", ctrl.CreateLabelTicket)
+			}
 
-		// Assignment routes
-		assignments := api.Group("/assignments")
-		{
-			assignments.POST("", ctrl.CreateAssignment)
-			assignments.GET("/ticket/:ticket_id", ctrl.GetTicketAssignments)
-			assignments.PUT("/:id", ctrl.UpdateAssignment)
-			assignments.DELETE("/:id", ctrl.DeleteAssignment)
-			assignments.DELETE("/user/:user_id", ctrl.DeleteAssignmentsByUserID)
-		}
+			// Assignee routes
+			assignees := kanban.Group("/assignees")
+			{
+				assignees.POST("", ctrl.CreateAssignee)
+				assignees.DELETE("", ctrl.DeleteAssignee)
+			}
 
-		// Checklist routes
-		checklists := api.Group("/checklists")
-		{
-			checklists.POST("", ctrl.CreateChecklist)
-			checklists.GET("/ticket/:ticketId", ctrl.GetChecklistsByTicketID)
-			checklists.PUT("/:id", ctrl.UpdateChecklist)
-			checklists.PUT("/:id/position", ctrl.UpdateChecklistPosition)
-			checklists.DELETE("/:id", ctrl.DeleteChecklist)
+			// Checklist routes
+			checklists := kanban.Group("/checklists")
+			{
+				checklists.POST("", ctrl.CreateChecklist)
+				checklists.PATCH("/:id", ctrl.UpdateChecklist)
+				checklists.DELETE("/:id", ctrl.DeleteChecklist)
+			}
 		}
 	}
-	return r
+
+	return router
 }

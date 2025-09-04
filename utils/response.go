@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -10,12 +11,9 @@ func JSON200(c *gin.Context, data gin.H) {
 	c.JSON(200, data)
 }
 
-func JSON500(c *gin.Context, err string) {
-	fmt.Print("Error: ", err, "\n")
-	c.JSON(500, gin.H{
-		"error":  "Internal Server Error",
-		"status": 500,
-	})
+func JSON201(c *gin.Context, data gin.H) {
+	data["status"] = 201
+	c.JSON(201, data)
 }
 
 func JSON400(c *gin.Context, err string) {
@@ -32,10 +30,10 @@ func JSON401(c *gin.Context, err string) {
 	})
 }
 
-func JSON409(c *gin.Context, err string) {
-	c.JSON(409, gin.H{
+func JSON403(c *gin.Context, err string) {
+	c.JSON(403, gin.H{
 		"error":  err,
-		"status": 409,
+		"status": 403,
 	})
 }
 
@@ -43,5 +41,20 @@ func JSON404(c *gin.Context, err string) {
 	c.JSON(404, gin.H{
 		"error":  err,
 		"status": 404,
+	})
+}
+
+func JSON409(c *gin.Context, err string) {
+	c.JSON(409, gin.H{
+		"error":  err,
+		"status": 409,
+	})
+}
+
+func JSON500(c *gin.Context, err string) {
+	fmt.Print("Error: ", err, "\n")
+	c.JSON(500, gin.H{
+		"error":  "Internal Server Error",
+		"status": 500,
 	})
 }

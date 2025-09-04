@@ -1,218 +1,257 @@
 package controller
 
 import (
-	"time"
-
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/tnqbao/gau-kanban-service/entity"
 	"github.com/tnqbao/gau-kanban-service/utils"
-
-	"github.com/gin-gonic/gin"
 )
 
-// CreateChecklist tạo checklist mới cho ticket
-func (ctrl *Controller) CreateChecklist(ctx *gin.Context) {
-	requestCtx := ctx.Request.Context()
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Create Checklist] Create new checklist request received")
+// CreateChecklist creates a new checklist item for a ticket
+func (ctrl *Controller) CreateChecklist(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Checklist] Create new checklist request received")
 
 	var req CreateChecklistRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Create Checklist] Invalid request body")
-		utils.JSON400(ctx, "Invalid request body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Checklist] Invalid request body")
+		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
 
-	// Lấy vị trí tiếp theo cho checklist trong ticket
-	maxPosition, err := ctrl.Repository.GetMaxChecklistPosition(req.TicketID)
+	// Extract user ID from JWT context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Create Checklist] User ID not found in context")
+		utils.JSON401(c, "Authentication required")
+		return
+	}
+
+	userIDStr := userID.(uuid.UUID).String()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Checklist] User ID: %s, Ticket ID: %s", userIDStr, req.TicketID)
+
+	// Verify ticket exists
+	_, err := ctrl.Repository.GetTicketByID(req.TicketID)
 	if err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Create Checklist] Failed to get max checklist position for ticket: %s", req.TicketID)
-		utils.JSON500(ctx, err.Error())
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Checklist] Ticket not found: %s", req.TicketID)
+		utils.JSON404(c, "Ticket not found")
 		return
 	}
 
+	// Get next order for this ticket
+	nextOrder, err := ctrl.Repository.GetNextChecklistOrder(req.TicketID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Checklist] Failed to get next order")
+		utils.JSON500(c, "Failed to get next order")
+		return
+	}
+
+	// Create checklist item
 	checklist := &entity.Checklist{
-		TicketID:  req.TicketID,
-		Title:     req.Title,
-		Completed: false,
-		Position:  maxPosition + 1,
-		CreatedAt: time.Now().Format(time.RFC3339),
-		UpdatedAt: time.Now().Format(time.RFC3339),
+		TicketID: req.TicketID,
+		Title:    req.Title,
+		Order:    nextOrder,
+		Status:   "pending",
 	}
 
 	if err := ctrl.Repository.CreateChecklist(checklist); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Create Checklist] Failed to create checklist")
-		utils.JSON500(ctx, err.Error())
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Checklist] Failed to create checklist")
+		utils.JSON500(c, "Failed to create checklist")
 		return
 	}
 
-	response := ChecklistDTO{
-		ID:        checklist.ID,
-		TicketID:  checklist.TicketID,
-		Title:     checklist.Title,
-		Completed: checklist.Completed,
-		Position:  checklist.Position,
-		CreatedAt: checklist.CreatedAt,
-		UpdatedAt: checklist.UpdatedAt,
-	}
-
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Create Checklist] Checklist created successfully: %s", checklist.ID)
-	utils.JSON200(ctx, gin.H{
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Create Checklist] Checklist created successfully: %s", checklist.ID)
+	utils.JSON201(c, gin.H{
 		"message": "Checklist created successfully",
-		"data":    response,
+		"data":    checklist,
 	})
 }
 
-// GetChecklistsByTicketID lấy tất cả checklist của một ticket
-func (ctrl *Controller) GetChecklistsByTicketID(ctx *gin.Context) {
-	requestCtx := ctx.Request.Context()
-	ticketID := ctx.Param("ticketId")
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Get Checklists By Ticket ID] Get checklists request received for ticket ID: %s", ticketID)
+// UpdateChecklist updates an existing checklist item
+func (ctrl *Controller) UpdateChecklist(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Checklist] Update checklist request received")
 
-	if ticketID == "" {
-		ctrl.Provider.LoggerProvider.WarningWithContextf(requestCtx, "[Get Checklists By Ticket ID] Ticket ID is required")
-		utils.JSON400(ctx, "Ticket ID is required")
-		return
-	}
-
-	checklists, err := ctrl.Repository.GetChecklistsByTicketID(ticketID)
-	if err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Get Checklists By Ticket ID] Failed to get checklists for ticket: %s", ticketID)
-		utils.JSON500(ctx, err.Error())
-		return
-	}
-
-	var response []ChecklistDTO
-	for _, checklist := range checklists {
-		response = append(response, ChecklistDTO{
-			ID:        checklist.ID,
-			TicketID:  checklist.TicketID,
-			Title:     checklist.Title,
-			Completed: checklist.Completed,
-			Position:  checklist.Position,
-			CreatedAt: checklist.CreatedAt,
-			UpdatedAt: checklist.UpdatedAt,
-		})
-	}
-
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Get Checklists By Ticket ID] Retrieved %d checklists for ticket: %s", len(response), ticketID)
-	utils.JSON200(ctx, gin.H{
-		"message": "Checklists retrieved successfully",
-		"data":    response,
-	})
-}
-
-// UpdateChecklist cập nhật checklist
-func (ctrl *Controller) UpdateChecklist(ctx *gin.Context) {
-	requestCtx := ctx.Request.Context()
-	checklistID := ctx.Param("id")
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Update Checklist] Update checklist request received for ID: %s", checklistID)
-
+	checklistID := c.Param("id")
 	if checklistID == "" {
-		ctrl.Provider.LoggerProvider.WarningWithContextf(requestCtx, "[Update Checklist] Checklist ID is required")
-		utils.JSON400(ctx, "Checklist ID is required")
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Update Checklist] Checklist ID is required")
+		utils.JSON400(c, "Checklist ID is required")
 		return
 	}
 
 	var req UpdateChecklistRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Update Checklist] Invalid request body")
-		utils.JSON400(ctx, "Invalid request body")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Invalid request body")
+		utils.JSON400(c, "Invalid request body: "+err.Error())
 		return
 	}
 
+	// Extract user ID from JWT context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Update Checklist] User ID not found in context")
+		utils.JSON401(c, "Authentication required")
+		return
+	}
+
+	userIDStr := userID.(uuid.UUID).String()
+
+	// Get checklist and verify it exists
 	checklist, err := ctrl.Repository.GetChecklistByID(checklistID)
 	if err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Update Checklist] Checklist not found: %s", checklistID)
-		utils.JSON404(ctx, "Checklist not found")
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Checklist not found: %s", checklistID)
+		utils.JSON404(c, "Checklist not found")
 		return
 	}
 
-	// Cập nhật các field nếu có trong request
-	if req.Title != nil {
-		checklist.Title = *req.Title
-	}
-	if req.Completed != nil {
-		checklist.Completed = *req.Completed
-	}
-	if req.Position != nil {
-		checklist.Position = *req.Position
+	// Get ticket to check board access
+	ticket, err := ctrl.Repository.GetTicketByID(checklist.TicketID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Ticket not found: %s", checklist.TicketID)
+		utils.JSON404(c, "Ticket not found")
+		return
 	}
 
-	checklist.UpdatedAt = time.Now().Format(time.RFC3339)
+	// Get column to check board access
+	column, err := ctrl.Repository.GetColumnByID(ticket.ColumnID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Column not found: %s", ticket.ColumnID)
+		utils.JSON404(c, "Column not found")
+		return
+	}
+
+	// Check if user has access to this board (is member or owner)
+	isMember, err := ctrl.Repository.IsMemberOfBoard(userIDStr, column.BoardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Failed to check member access")
+		utils.JSON500(c, "Failed to check board access")
+		return
+	}
+
+	if !isMember {
+		// Also check if user is owner
+		board, err := ctrl.Repository.GetBoardByID(column.BoardID)
+		if err != nil {
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Board not found: %s", column.BoardID)
+			utils.JSON404(c, "Board not found")
+			return
+		}
+
+		if board.OwnerID != userIDStr {
+			ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Update Checklist] User %s does not have access to board %s", userIDStr, column.BoardID)
+			utils.JSON403(c, "Access denied: You are not a member of this board")
+			return
+		}
+	}
+
+	// Validate status values
+	validStatuses := map[string]bool{"pending": true, "completed": true}
+	if !validStatuses[req.Status] {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Update Checklist] Invalid status: %s", req.Status)
+		utils.JSON400(c, "Invalid status. Must be one of: pending, completed")
+		return
+	}
+
+	// Update checklist status
+	checklist.Status = req.Status
 
 	if err := ctrl.Repository.UpdateChecklist(checklist); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Update Checklist] Failed to update checklist: %s", checklistID)
-		utils.JSON500(ctx, err.Error())
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Update Checklist] Failed to update checklist")
+		utils.JSON500(c, "Failed to update checklist")
 		return
 	}
 
-	response := ChecklistDTO{
-		ID:        checklist.ID,
-		TicketID:  checklist.TicketID,
-		Title:     checklist.Title,
-		Completed: checklist.Completed,
-		Position:  checklist.Position,
-		CreatedAt: checklist.CreatedAt,
-		UpdatedAt: checklist.UpdatedAt,
-	}
-
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Update Checklist] Checklist updated successfully: %s", checklistID)
-	utils.JSON200(ctx, gin.H{
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Update Checklist] Checklist updated successfully: %s", checklist.ID)
+	utils.JSON200(c, gin.H{
 		"message": "Checklist updated successfully",
-		"data":    response,
+		"data":    checklist,
 	})
 }
 
-// UpdateChecklistPosition cập nhật vị trí checklist
-func (ctrl *Controller) UpdateChecklistPosition(ctx *gin.Context) {
-	requestCtx := ctx.Request.Context()
-	checklistID := ctx.Param("id")
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Update Checklist Position] Update checklist position request received for ID: %s", checklistID)
+// DeleteChecklist deletes a checklist item
+func (ctrl *Controller) DeleteChecklist(c *gin.Context) {
+	ctx := c.Request.Context()
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Delete Checklist] Delete checklist request received")
 
+	checklistID := c.Param("id")
 	if checklistID == "" {
-		ctrl.Provider.LoggerProvider.WarningWithContextf(requestCtx, "[Update Checklist Position] Checklist ID is required")
-		utils.JSON400(ctx, "Checklist ID is required")
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Delete Checklist] Checklist ID is required")
+		utils.JSON400(c, "Checklist ID is required")
 		return
 	}
 
-	var req UpdateChecklistPositionRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Update Checklist Position] Invalid request body")
-		utils.JSON400(ctx, "Invalid request body")
+	// Extract user ID from JWT context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Delete Checklist] User ID not found in context")
+		utils.JSON401(c, "Authentication required")
 		return
 	}
 
-	if err := ctrl.Repository.UpdateChecklistPosition(checklistID, req.Position); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Update Checklist Position] Failed to update checklist position: %s", checklistID)
-		utils.JSON500(ctx, err.Error())
+	userIDStr := userID.(uuid.UUID).String()
+
+	// Get checklist and verify it exists
+	checklist, err := ctrl.Repository.GetChecklistByID(checklistID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Checklist not found: %s", checklistID)
+		utils.JSON404(c, "Checklist not found")
 		return
 	}
 
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Update Checklist Position] Checklist position updated successfully: %s to position %d", checklistID, req.Position)
-	utils.JSON200(ctx, gin.H{
-		"message": "Checklist position updated successfully",
-	})
-}
-
-// DeleteChecklist xóa checklist
-func (ctrl *Controller) DeleteChecklist(ctx *gin.Context) {
-	requestCtx := ctx.Request.Context()
-	checklistID := ctx.Param("id")
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Delete Checklist] Delete checklist request received for ID: %s", checklistID)
-
-	if checklistID == "" {
-		ctrl.Provider.LoggerProvider.WarningWithContextf(requestCtx, "[Delete Checklist] Checklist ID is required")
-		utils.JSON400(ctx, "Checklist ID is required")
+	// Get ticket to check board access
+	ticket, err := ctrl.Repository.GetTicketByID(checklist.TicketID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Ticket not found: %s", checklist.TicketID)
+		utils.JSON404(c, "Ticket not found")
 		return
 	}
 
+	// Get column to check board access
+	column, err := ctrl.Repository.GetColumnByID(ticket.ColumnID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Column not found: %s", ticket.ColumnID)
+		utils.JSON404(c, "Column not found")
+		return
+	}
+
+	// Check if user has access to this board (is member or owner)
+	isMember, err := ctrl.Repository.IsMemberOfBoard(userIDStr, column.BoardID)
+	if err != nil {
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Failed to check member access")
+		utils.JSON500(c, "Failed to check board access")
+		return
+	}
+
+	if !isMember {
+		// Also check if user is owner
+		board, err := ctrl.Repository.GetBoardByID(column.BoardID)
+		if err != nil {
+			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Board not found: %s", column.BoardID)
+			utils.JSON404(c, "Board not found")
+			return
+		}
+
+		if board.OwnerID != userIDStr {
+			ctrl.Provider.LoggerProvider.WarningWithContextf(ctx, "[Delete Checklist] User %s does not have access to board %s", userIDStr, column.BoardID)
+			utils.JSON403(c, "Access denied: You are not a member of this board")
+			return
+		}
+	}
+
+	// Delete checklist from database
 	if err := ctrl.Repository.DeleteChecklist(checklistID); err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(requestCtx, err, "[Delete Checklist] Failed to delete checklist: %s", checklistID)
-		utils.JSON500(ctx, err.Error())
+		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Delete Checklist] Failed to delete checklist")
+		utils.JSON500(c, "Failed to delete checklist")
 		return
 	}
 
-	ctrl.Provider.LoggerProvider.InfoWithContextf(requestCtx, "[Delete Checklist] Checklist deleted successfully: %s", checklistID)
-	utils.JSON200(ctx, gin.H{
+	ctrl.Provider.LoggerProvider.InfoWithContextf(ctx, "[Delete Checklist] Checklist deleted successfully: %s", checklist.ID)
+	utils.JSON200(c, gin.H{
 		"message": "Checklist deleted successfully",
+		"data": gin.H{
+			"id":        checklist.ID,
+			"ticket_id": checklist.TicketID,
+			"title":     checklist.Title,
+		},
 	})
 }

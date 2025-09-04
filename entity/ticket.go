@@ -1,18 +1,34 @@
 package entity
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type Ticket struct {
-	ID          string  `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	TicketNo    string  `gorm:"type:text;unique;not null" json:"ticket_no"`
-	ColumnID    string  `gorm:"type:uuid;not null" json:"column_id"`
-	Title       string  `gorm:"type:text;not null" json:"title"`
-	Description string  `gorm:"type:text" json:"description"`
-	DueDate     *string `gorm:"type:date" json:"due_date"`
-	Priority    *string `gorm:"type:text" json:"priority"`
-	Position    int     `gorm:"type:integer;default:0" json:"position"`
-	CreatedAt   string  `gorm:"type:timestamp with time zone;default:now()" json:"created_at"`
-	UpdatedAt   string  `gorm:"type:timestamp with time zone;default:now()" json:"updated_at"`
+	ID           string     `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	TicketNumber string     `json:"ticket_number" gorm:"type:varchar(10);unique;not null"`
+	Title        string     `json:"title" gorm:"type:varchar(255);not null"`
+	Description  string     `json:"description" gorm:"type:text"`
+	ColumnID     string     `json:"column_id" gorm:"type:uuid;not null"`
+	Position     int        `json:"position" gorm:"default:0"`
+	Priority     string     `json:"priority" gorm:"type:varchar(20);default:'medium'"`
+	DueDate      *time.Time `json:"due_date" gorm:"type:timestamp"`
+	Status       string     `json:"status" gorm:"type:varchar(50);default:'open'"`
+	CreatedAt    time.Time  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt    time.Time  `json:"updated_at" gorm:"autoUpdateTime"`
+
+	// Relations
+	Assignees  []TicketAssignee `json:"assignees" gorm:"foreignKey:TicketID"`
+	Labels     []TicketLabel    `json:"labels" gorm:"foreignKey:TicketID"`
+	Checklists []Checklist      `json:"checklists" gorm:"foreignKey:TicketID"`
 }
 
-func (Ticket) TableName() string {
-	return "tickets"
+func (t *Ticket) BeforeCreate(tx *gorm.DB) error {
+	if t.ID == "" {
+		t.ID = uuid.New().String()
+	}
+	return nil
 }

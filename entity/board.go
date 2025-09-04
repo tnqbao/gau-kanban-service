@@ -1,14 +1,30 @@
 package entity
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type Board struct {
-	ID          string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	Title       string `gorm:"type:text;not null" json:"title"`
-	Description string `gorm:"type:text" json:"description"`
-	Archived    bool   `gorm:"type:boolean;default:false" json:"archived"`
-	CreatedAt   string `gorm:"type:timestamp with time zone;default:now()" json:"created_at"`
-	UpdatedAt   string `gorm:"type:timestamp with time zone;default:now()" json:"updated_at"`
+	ID          string    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	Title       string    `json:"title" gorm:"type:varchar(255);not null"`
+	Description string    `json:"description" gorm:"type:text"`
+	OwnerID     string    `json:"owner_id" gorm:"type:uuid;not null"`
+	Archived    bool      `json:"archived" gorm:"default:false"`
+	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+
+	// Relations - these are loaded separately and not stored in DB
+	Columns []Column `json:"columns" gorm:"-"`
+	Members []Member `json:"members" gorm:"-"`
+	Labels  []Label  `json:"labels" gorm:"-"`
 }
 
-func (Board) TableName() string {
-	return "boards"
+func (b *Board) BeforeCreate(tx *gorm.DB) error {
+	if b.ID == "" {
+		b.ID = uuid.New().String()
+	}
+	return nil
 }

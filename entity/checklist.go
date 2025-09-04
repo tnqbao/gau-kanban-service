@@ -1,15 +1,25 @@
 package entity
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
 type Checklist struct {
-	ID        string `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-	TicketID  string `gorm:"type:uuid;not null" json:"ticket_id"`
-	Title     string `gorm:"type:text;not null" json:"title"`
-	Completed bool   `gorm:"type:boolean;default:false" json:"completed"`
-	Position  int    `gorm:"type:integer;default:0" json:"position"`
-	CreatedAt string `gorm:"type:timestamp with time zone;default:now()" json:"created_at"`
-	UpdatedAt string `gorm:"type:timestamp with time zone;default:now()" json:"updated_at"`
+	ID        string    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
+	TicketID  string    `json:"ticket_id" gorm:"type:uuid;not null"`
+	Title     string    `json:"title" gorm:"type:varchar(255);not null"`
+	Order     int       `json:"order" gorm:"column:order;default:0"`
+	Status    string    `json:"status" gorm:"type:varchar(20);default:'pending'"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
-func (Checklist) TableName() string {
-	return "checklists"
+func (cl *Checklist) BeforeCreate(tx *gorm.DB) error {
+	if cl.ID == "" {
+		cl.ID = uuid.New().String()
+	}
+	return nil
 }
