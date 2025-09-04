@@ -259,10 +259,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiResponse"
+                  "$ref": "#/components/schemas/ColumnsWithTicketsResponse"
                 }
               }
             }
+          },
+          "404": {
+            "description": "Board not found"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -1327,7 +1333,17 @@
             "type": "string"
           },
           "ticket_id": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable ticket identifier"
+          },
+          "column_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the column this ticket belongs to"
+          },
+          "position": {
+            "type": "integer",
+            "description": "Position of the ticket within its column"
           },
           "labels": {
             "type": "array",
@@ -1357,10 +1373,12 @@
             "type": "boolean"
           },
           "due_date": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "priority": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "created_at": {
             "type": "string",
@@ -1458,6 +1476,68 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ColumnsWithTicketsResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Columns with tickets retrieved successfully"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColumnWithTicketsDTO"
+            }
+          },
+          "status": {
+            "type": "integer",
+            "example": 200
+          }
+        }
+      },
+      "ColumnWithTicketsDTO": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Column ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Column title"
+          },
+          "board_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Board ID this column belongs to"
+          },
+          "position": {
+            "type": "integer",
+            "description": "Position of the column within the board"
+          },
+          "wip_limit": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Work in progress limit for this column"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketDTO"
+            },
+            "description": "Array of tickets in this column (empty array if no tickets)"
           }
         }
       }
