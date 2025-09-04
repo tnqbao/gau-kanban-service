@@ -148,7 +148,7 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 			Title:     column.Title,
 			BoardID:   column.BoardID,
 			Position:  column.Position,
-			Tickets:   []TicketDTO{},
+			Tickets:   []TicketDTO{}, // Luôn khởi tạo mảng rỗng
 			CreatedAt: column.CreatedAt,
 			UpdatedAt: column.UpdatedAt,
 		}
@@ -157,7 +157,9 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 		var tickets []entity.Ticket
 		err := r.db.Where("column_id = ?", column.ID).Order("position ASC, created_at ASC").Find(&tickets).Error
 		if err != nil {
-			continue // Skip this column if error
+			// Nếu có lỗi, vẫn thêm column với tickets rỗng thay vì bỏ qua
+			result = append(result, columnDTO)
+			continue
 		}
 
 		// Convert tickets thành TicketDTO với thông tin cơ bản
@@ -229,6 +231,7 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 			columnDTO.Tickets = append(columnDTO.Tickets, ticketDTO)
 		}
 
+		// Luôn thêm column vào result, kể cả khi không có tickets
 		result = append(result, columnDTO)
 	}
 
@@ -266,7 +269,7 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 			Title:     column.Title,
 			BoardID:   column.BoardID,
 			Position:  column.Position,
-			Tickets:   []TicketDTO{},
+			Tickets:   []TicketDTO{}, // Luôn khởi tạo mảng rỗng
 			CreatedAt: column.CreatedAt,
 			UpdatedAt: column.UpdatedAt,
 		}
@@ -275,7 +278,9 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 		var tickets []entity.Ticket
 		err := r.db.Where("column_id = ?", column.ID).Order("position ASC, created_at ASC").Find(&tickets).Error
 		if err != nil {
-			continue // Skip this column if error
+			// Nếu có lỗi, vẫn thêm column với tickets rỗng thay vì bỏ qua
+			result = append(result, columnDTO)
+			continue
 		}
 
 		// Convert tickets thành TicketDTO với thông tin cơ bản
@@ -347,6 +352,7 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 			columnDTO.Tickets = append(columnDTO.Tickets, ticketDTO)
 		}
 
+		// Luôn thêm column vào result, kể cả khi không có tickets
 		result = append(result, columnDTO)
 	}
 
