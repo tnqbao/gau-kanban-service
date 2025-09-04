@@ -7,7 +7,9 @@ type TicketDTO struct {
 	ID          string         `json:"id"`
 	Title       string         `json:"title"`
 	Description string         `json:"description"`
-	TicketID    string         `json:"ticket_id"`
+	TicketID    string         `json:"ticket_id"`  // Maps to TicketNo from entity
+	ColumnID    string         `json:"column_id"`  // Added missing field
+	Position    int            `json:"position"`   // Added missing field
 	Labels      []LabelDTO     `json:"labels"`     // Thông tin chi tiết labels
 	Assignees   []AssigneeDTO  `json:"assignees"`  // Thông tin chi tiết assignees
 	Comments    []CommentDTO   `json:"comments"`   // Danh sách comments

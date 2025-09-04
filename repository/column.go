@@ -99,7 +99,9 @@ func (r *Repository) GetColumnById(id string) (*ColumnWithTicketsDTO, error) {
 			ID:          ticket.ID,
 			Title:       ticket.Title,
 			Description: ticket.Description,
-			TicketID:    ticket.ID,
+			TicketID:    ticket.TicketNo, // Fixed: Use TicketNo instead of ID
+			ColumnID:    ticket.ColumnID, // Added missing field
+			Position:    ticket.Position, // Added missing field
 			Labels:      labels,
 			Assignees:   assignees,
 			Comments:    comments,   // Now includes actual comments data
@@ -210,7 +212,9 @@ func (r *Repository) GetAllWithTickets() ([]ColumnWithTicketsDTO, error) {
 				ID:          ticket.ID,
 				Title:       ticket.Title,
 				Description: ticket.Description,
-				TicketID:    ticket.ID,
+				TicketID:    ticket.TicketNo, // Fixed: Use TicketNo instead of ID
+				ColumnID:    ticket.ColumnID, // Added missing field
+				Position:    ticket.Position, // Added missing field
 				Labels:      labels,
 				Assignees:   assignees,
 				Comments:    comments,   // Now includes actual comments data
@@ -326,7 +330,9 @@ func (r *Repository) GetColumnsByBoardIdWithTickets(boardID string) ([]ColumnWit
 				ID:          ticket.ID,
 				Title:       ticket.Title,
 				Description: ticket.Description,
-				TicketID:    ticket.ID,
+				TicketID:    ticket.TicketNo, // Fixed: Use TicketNo instead of ID
+				ColumnID:    ticket.ColumnID, // Added missing field
+				Position:    ticket.Position, // Added missing field
 				Labels:      labels,
 				Assignees:   assignees,
 				Comments:    comments,   // Now includes actual comments data
