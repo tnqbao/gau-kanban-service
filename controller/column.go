@@ -164,7 +164,8 @@ func (ctrl *Controller) GetColumnsByBoardId(c *gin.Context) {
 		return
 	}
 
-	columns, err := ctrl.Repository.GetColumnsByBoardId(boardID)
+	// Sử dụng GetColumnsByBoardIdWithTickets để đảm bảo trả về định dạng nhất quán
+	columns, err := ctrl.Repository.GetColumnsByBoardIdWithTickets(boardID)
 	if err != nil {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Get Columns By Board ID] Failed to get columns for board: %s", boardID)
 		utils.JSON500(c, err.Error())
