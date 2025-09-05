@@ -3,6 +3,14 @@
   <component name="CopilotDiffPersistence">
     <option name="pendingDiffs">
       <map>
+        <entry key="$PROJECT_DIR$/migrations/000002_drop_checklist_order.up.sql">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/migrations/000002_drop_checklist_order.up.sql" />
+              <option name="updatedContent" value="-- Drop order column from checklists table&#10;ALTER TABLE checklists DROP COLUMN IF EXISTS &quot;order&quot;;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/migrations/20250808120000_empty_migration.down.sql">
           <value>
             <PendingDiffInfo>

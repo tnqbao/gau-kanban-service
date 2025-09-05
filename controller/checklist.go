@@ -38,19 +38,10 @@ func (ctrl *Controller) CreateChecklist(c *gin.Context) {
 		return
 	}
 
-	// Get next order for this ticket
-	nextOrder, err := ctrl.Repository.GetNextChecklistOrder(req.TicketID)
-	if err != nil {
-		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Create Checklist] Failed to get next order")
-		utils.JSON500(c, "Failed to get next order")
-		return
-	}
-
 	// Create checklist item
 	checklist := &entity.Checklist{
 		TicketID: req.TicketID,
 		Title:    req.Title,
-		Order:    nextOrder,
 		Status:   "pending",
 	}
 

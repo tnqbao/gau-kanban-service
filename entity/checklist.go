@@ -11,7 +11,6 @@ type Checklist struct {
 	ID        string    `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	TicketID  string    `json:"ticket_id" gorm:"type:uuid;not null"`
 	Title     string    `json:"title" gorm:"type:varchar(255);not null"`
-	Order     int       `json:"order" gorm:"column:order;default:0"`
 	Status    string    `json:"status" gorm:"type:varchar(20);default:'pending'"`
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`

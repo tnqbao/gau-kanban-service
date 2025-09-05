@@ -11,17 +11,8 @@ func (r *Repository) CreateChecklist(checklist *entity.Checklist) error {
 
 func (r *Repository) GetChecklistsByTicketID(ticketID string) ([]entity.Checklist, error) {
 	var checklists []entity.Checklist
-	err := r.db.Where("ticket_id = ?", ticketID).Order("order ASC").Find(&checklists).Error
+	err := r.db.Where("ticket_id = ?", ticketID).Find(&checklists).Error
 	return checklists, err
-}
-
-func (r *Repository) GetNextChecklistOrder(ticketID string) (int, error) {
-	var maxOrder int
-	err := r.db.Model(&entity.Checklist{}).
-		Where("ticket_id = ?", ticketID).
-		Select("COALESCE(MAX(order), 0) + 1").
-		Scan(&maxOrder).Error
-	return maxOrder, err
 }
 
 func (r *Repository) UpdateChecklist(checklist *entity.Checklist) error {
