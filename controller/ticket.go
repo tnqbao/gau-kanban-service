@@ -528,7 +528,7 @@ func (ctrl *Controller) MoveTicket(c *gin.Context) {
 	case len(req.Position) > 6 && req.Position[:6] == "after:":
 		referenceTicketID := req.Position[6:]
 
-		// Get reference ticket
+		// Get reference ticket (can be from any column)
 		refTicket, err := ctrl.Repository.GetTicketByID(referenceTicketID)
 		if err != nil {
 			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Reference ticket not found: %s", referenceTicketID)
@@ -536,33 +536,43 @@ func (ctrl *Controller) MoveTicket(c *gin.Context) {
 			return
 		}
 
-		// Verify reference ticket is in the same target column
-		if refTicket.ColumnID != req.ColumnID {
-			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Move Ticket] Reference ticket is not in target column")
-			utils.JSON400(c, "Reference ticket must be in the target column")
-			return
-		}
+		if refTicket.ColumnID == req.ColumnID {
+			// Reference ticket is in the same target column - use position-based calculation
+			nextPosition, err := ctrl.Repository.GetNextPositionAfter(req.ColumnID, refTicket.Position)
+			if err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get next position")
+				utils.JSON500(c, "Failed to calculate position")
+				return
+			}
 
-		// Get next ticket position after reference
-		nextPosition, err := ctrl.Repository.GetNextPositionAfter(req.ColumnID, refTicket.Position)
-		if err != nil {
-			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get next position")
-			utils.JSON500(c, "Failed to calculate position")
-			return
-		}
-
-		if nextPosition == 0 {
-			// Reference ticket is last, place after it
-			newPosition = refTicket.Position + 1000
+			if nextPosition == 0 {
+				// Reference ticket is last, place after it
+				newPosition = refTicket.Position + 1000
+			} else {
+				// Place between reference and next ticket
+				newPosition = (refTicket.Position + nextPosition) / 2
+			}
 		} else {
-			// Place between reference and next ticket
-			newPosition = (refTicket.Position + nextPosition) / 2
+			// Reference ticket is in different column - place at end of target column
+			maxPosition, err := ctrl.Repository.GetMaxPositionByColumnID(req.ColumnID)
+			if err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get max position")
+				utils.JSON500(c, "Failed to calculate position")
+				return
+			}
+
+			if maxPosition == 0 {
+				// Target column is empty, set first position
+				newPosition = 1000
+			} else {
+				newPosition = maxPosition + 1000
+			}
 		}
 
 	case len(req.Position) > 7 && req.Position[:7] == "before:":
 		referenceTicketID := req.Position[7:]
 
-		// Get reference ticket
+		// Get reference ticket (can be from any column)
 		refTicket, err := ctrl.Repository.GetTicketByID(referenceTicketID)
 		if err != nil {
 			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Reference ticket not found: %s", referenceTicketID)
@@ -570,27 +580,37 @@ func (ctrl *Controller) MoveTicket(c *gin.Context) {
 			return
 		}
 
-		// Verify reference ticket is in the same target column
-		if refTicket.ColumnID != req.ColumnID {
-			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Move Ticket] Reference ticket is not in target column")
-			utils.JSON400(c, "Reference ticket must be in the target column")
-			return
-		}
+		if refTicket.ColumnID == req.ColumnID {
+			// Reference ticket is in the same target column - use position-based calculation
+			prevPosition, err := ctrl.Repository.GetPreviousPositionBefore(req.ColumnID, refTicket.Position)
+			if err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get previous position")
+				utils.JSON500(c, "Failed to calculate position")
+				return
+			}
 
-		// Get previous ticket position before reference
-		prevPosition, err := ctrl.Repository.GetPreviousPositionBefore(req.ColumnID, refTicket.Position)
-		if err != nil {
-			ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get previous position")
-			utils.JSON500(c, "Failed to calculate position")
-			return
-		}
-
-		if prevPosition == 0 {
-			// Reference ticket is first, place before it
-			newPosition = refTicket.Position - 1000
+			if prevPosition == 0 {
+				// Reference ticket is first, place before it
+				newPosition = refTicket.Position - 1000
+			} else {
+				// Place between previous and reference ticket
+				newPosition = (prevPosition + refTicket.Position) / 2
+			}
 		} else {
-			// Place between previous and reference ticket
-			newPosition = (prevPosition + refTicket.Position) / 2
+			// Reference ticket is in different column - place at beginning of target column
+			minPosition, err := ctrl.Repository.GetMinPositionByColumnID(req.ColumnID)
+			if err != nil {
+				ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, err, "[Move Ticket] Failed to get min position")
+				utils.JSON500(c, "Failed to calculate position")
+				return
+			}
+
+			if minPosition == 0 {
+				// Target column is empty, set first position
+				newPosition = 1000
+			} else {
+				newPosition = minPosition - 1000
+			}
 		}
 
 	default:
