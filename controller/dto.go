@@ -77,7 +77,7 @@ type UpdateChecklistRequest struct {
 // Assignee DTOs
 type CreateAssigneeRequest struct {
 	TicketID string `json:"ticket_id" binding:"required"`
-	MemberID string `json:"member_id" binding:"required"`
+	UserID   string `json:"user_id" binding:"required"`
 }
 
 // Label DTOs

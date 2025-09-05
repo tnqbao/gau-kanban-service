@@ -39,3 +39,12 @@ func (r *Repository) IsMemberExists(userID, boardID string) (bool, error) {
 	err := r.db.Model(&entity.Member{}).Where("user_id = ? AND board_id = ?", userID, boardID).Count(&count).Error
 	return count > 0, err
 }
+
+func (r *Repository) GetMemberByUserIDAndBoardID(userID, boardID string) (*entity.Member, error) {
+	var member entity.Member
+	err := r.db.Preload("User").Where("user_id = ? AND board_id = ?", userID, boardID).First(&member).Error
+	if err != nil {
+		return nil, err
+	}
+	return &member, nil
+}
