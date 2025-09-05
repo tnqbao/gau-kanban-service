@@ -24,7 +24,32 @@ func (r *Repository) GetColumnsByBoardID(boardID string) ([]entity.Column, error
 
 func (r *Repository) GetColumnsWithTicketsByBoardID(boardID string) ([]entity.Column, error) {
 	var columns []entity.Column
-	err := r.db.Preload("Tickets").Where("board_id = ?", boardID).Order("position ASC").Find(&columns).Error
+	err := r.db.Preload("Tickets.Assignees.Member.User").
+		Preload("Tickets.Labels.Label").
+		Preload("Tickets.Checklists").
+		Where("board_id = ?", boardID).
+		Order("position ASC").
+		Find(&columns).Error
+
+	// Ensure arrays are never nil
+	for i := range columns {
+		if columns[i].Tickets == nil {
+			columns[i].Tickets = []entity.Ticket{}
+		}
+		// Ensure nested ticket arrays are also not nil
+		for j := range columns[i].Tickets {
+			if columns[i].Tickets[j].Assignees == nil {
+				columns[i].Tickets[j].Assignees = []entity.TicketAssignee{}
+			}
+			if columns[i].Tickets[j].Labels == nil {
+				columns[i].Tickets[j].Labels = []entity.TicketLabel{}
+			}
+			if columns[i].Tickets[j].Checklists == nil {
+				columns[i].Tickets[j].Checklists = []entity.Checklist{}
+			}
+		}
+	}
+
 	return columns, err
 }
 
@@ -43,10 +68,32 @@ func (r *Repository) GetColumnByID(id string) (*entity.Column, error) {
 
 func (r *Repository) GetColumnWithTicketsByID(id string) (*entity.Column, error) {
 	var column entity.Column
-	err := r.db.Preload("Tickets").Where("id = ?", id).First(&column).Error
+	err := r.db.Preload("Tickets.Assignees.Member.User").
+		Preload("Tickets.Labels.Label").
+		Preload("Tickets.Checklists").
+		Where("id = ?", id).
+		First(&column).Error
 	if err != nil {
 		return nil, err
 	}
+
+	// Ensure arrays are never nil
+	if column.Tickets == nil {
+		column.Tickets = []entity.Ticket{}
+	}
+	// Ensure nested ticket arrays are also not nil
+	for j := range column.Tickets {
+		if column.Tickets[j].Assignees == nil {
+			column.Tickets[j].Assignees = []entity.TicketAssignee{}
+		}
+		if column.Tickets[j].Labels == nil {
+			column.Tickets[j].Labels = []entity.TicketLabel{}
+		}
+		if column.Tickets[j].Checklists == nil {
+			column.Tickets[j].Checklists = []entity.Checklist{}
+		}
+	}
+
 	return &column, nil
 }
 

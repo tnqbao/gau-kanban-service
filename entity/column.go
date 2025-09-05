@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Column struct {
 	ID        string    `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
@@ -17,4 +20,16 @@ type Column struct {
 
 func (Column) TableName() string {
 	return "columns"
+}
+
+// MarshalJSON ensures that nil slices are marshaled as empty arrays
+func (c Column) MarshalJSON() ([]byte, error) {
+	type Alias Column
+
+	// Initialize nil slices as empty arrays
+	if c.Tickets == nil {
+		c.Tickets = []Ticket{}
+	}
+
+	return json.Marshal((Alias)(c))
 }

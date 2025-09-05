@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,4 +32,22 @@ func (t *Ticket) BeforeCreate(tx *gorm.DB) error {
 		t.ID = uuid.New().String()
 	}
 	return nil
+}
+
+// MarshalJSON ensures that nil slices are marshaled as empty arrays
+func (t Ticket) MarshalJSON() ([]byte, error) {
+	type Alias Ticket
+
+	// Initialize nil slices as empty arrays
+	if t.Assignees == nil {
+		t.Assignees = []TicketAssignee{}
+	}
+	if t.Labels == nil {
+		t.Labels = []TicketLabel{}
+	}
+	if t.Checklists == nil {
+		t.Checklists = []Checklist{}
+	}
+
+	return json.Marshal((Alias)(t))
 }

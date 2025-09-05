@@ -22,6 +22,20 @@ func (r *Repository) GetBoardsByUserID(userID string) ([]entity.Board, error) {
 	var boards []entity.Board
 	err := r.db.Where("(owner_id = ? OR id IN (SELECT board_id FROM members WHERE user_id = ?)) AND archived = false", userID, userID).
 		Find(&boards).Error
+
+	// Ensure arrays are never nil for each board
+	for i := range boards {
+		if boards[i].Columns == nil {
+			boards[i].Columns = []entity.Column{}
+		}
+		if boards[i].Members == nil {
+			boards[i].Members = []entity.Member{}
+		}
+		if boards[i].Labels == nil {
+			boards[i].Labels = []entity.Label{}
+		}
+	}
+
 	return boards, err
 }
 
@@ -40,10 +54,21 @@ func (r *Repository) GetBoardWithColumnsAndTickets(boardID string) (*entity.Boar
 		return nil, nil, err
 	}
 
+	// Ensure board arrays are not nil
+	if board.Columns == nil {
+		board.Columns = []entity.Column{}
+	}
+	if board.Members == nil {
+		board.Members = []entity.Member{}
+	}
+	if board.Labels == nil {
+		board.Labels = []entity.Label{}
+	}
+
 	// Get columns with tickets
 	columns, err := r.GetColumnsWithTicketsByBoardID(boardID)
 	if err != nil {
-		return board, nil, err
+		return board, []entity.Column{}, err
 	}
 
 	return board, columns, nil

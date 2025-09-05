@@ -13,6 +13,17 @@ func (r *Repository) CreateTicket(ticket *entity.Ticket) error {
 	r.db.Model(&entity.Ticket{}).Count(&count)
 	ticket.TicketNumber = fmt.Sprintf("#%06d", count+1)
 
+	// Initialize empty arrays
+	if ticket.Assignees == nil {
+		ticket.Assignees = []entity.TicketAssignee{}
+	}
+	if ticket.Labels == nil {
+		ticket.Labels = []entity.TicketLabel{}
+	}
+	if ticket.Checklists == nil {
+		ticket.Checklists = []entity.Checklist{}
+	}
+
 	return r.db.Create(ticket).Error
 }
 
@@ -37,13 +48,25 @@ func (r *Repository) GetMaxOrderByColumnID(columnID string) (int, error) {
 func (r *Repository) GetTicketByID(id string) (*entity.Ticket, error) {
 	var ticket entity.Ticket
 	err := r.db.Where("id = ?", id).
-		Preload("Assignees").
-		Preload("Labels").
+		Preload("Assignees.Member.User").
+		Preload("Labels.Label").
 		Preload("Checklists").
 		First(&ticket).Error
 	if err != nil {
 		return nil, err
 	}
+
+	// Ensure arrays are never nil
+	if ticket.Assignees == nil {
+		ticket.Assignees = []entity.TicketAssignee{}
+	}
+	if ticket.Labels == nil {
+		ticket.Labels = []entity.TicketLabel{}
+	}
+	if ticket.Checklists == nil {
+		ticket.Checklists = []entity.Checklist{}
+	}
+
 	return &ticket, nil
 }
 
@@ -51,10 +74,24 @@ func (r *Repository) GetTicketsByColumnID(columnID string) ([]entity.Ticket, err
 	var tickets []entity.Ticket
 	err := r.db.Where("column_id = ?", columnID).
 		Order("position ASC").
-		Preload("Assignees").
-		Preload("Labels").
+		Preload("Assignees.Member.User").
+		Preload("Labels.Label").
 		Preload("Checklists").
 		Find(&tickets).Error
+
+	// Ensure arrays are never nil for each ticket
+	for i := range tickets {
+		if tickets[i].Assignees == nil {
+			tickets[i].Assignees = []entity.TicketAssignee{}
+		}
+		if tickets[i].Labels == nil {
+			tickets[i].Labels = []entity.TicketLabel{}
+		}
+		if tickets[i].Checklists == nil {
+			tickets[i].Checklists = []entity.Checklist{}
+		}
+	}
+
 	return tickets, err
 }
 
@@ -122,8 +159,8 @@ func (r *Repository) SearchTicketsByColumnAndTitle(columnID string, searchTerm s
 	}
 
 	err := query.Order("position ASC").
-		Preload("Assignees").
-		Preload("Labels").
+		Preload("Assignees.Member.User").
+		Preload("Labels.Label").
 		Preload("Checklists").
 		Find(&tickets).Error
 	return tickets, err
@@ -158,8 +195,8 @@ func (r *Repository) FilterTicketsByColumn(columnID string, assigneeID string, l
 	}
 
 	err := query.Order("position ASC").
-		Preload("Assignees").
-		Preload("Labels").
+		Preload("Assignees.Member.User").
+		Preload("Labels.Label").
 		Preload("Checklists").
 		Find(&tickets).Error
 	return tickets, err

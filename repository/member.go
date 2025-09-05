@@ -11,13 +11,13 @@ func (r *Repository) CreateMember(member *entity.Member) error {
 
 func (r *Repository) GetMembersByBoardID(boardID string) ([]entity.Member, error) {
 	var members []entity.Member
-	err := r.db.Where("board_id = ?", boardID).Find(&members).Error
+	err := r.db.Preload("User").Where("board_id = ?", boardID).Find(&members).Error
 	return members, err
 }
 
 func (r *Repository) GetMemberByID(id string) (*entity.Member, error) {
 	var member entity.Member
-	err := r.db.Where("id = ?", id).First(&member).Error
+	err := r.db.Preload("User").Where("id = ?", id).First(&member).Error
 	if err != nil {
 		return nil, err
 	}

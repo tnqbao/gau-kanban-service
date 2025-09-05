@@ -1,0 +1,1912 @@
+{"openapi": "3.0.3",
+  "info": {
+    "title": "Gauas Kanban Service API",
+    "description": "Comprehensive API documentation for the Gauas Kanban Service - a feature-rich project management system with boards, columns, tickets, and collaboration features.",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Gauas Team",
+      "url": "https://gauas.online"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.gauas.online/api/v2/kanban",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8080/api/v2/kanban",
+      "description": "Development server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Board": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+          },
+          "title": {
+            "type": "string",
+            "example": "Project Kanban"
+          },
+          "description": {
+            "type": "string",
+            "example": "Board for managing sprint tasks"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "2b7c6ff0-c9df-4103-bbcc-2364cea7a5a6"
+          },
+          "archived": {
+            "type": "boolean",
+            "example": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "Column": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "fc63a959-9445-45ae-b036-c222a2baa62a"
+          },
+          "board_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+          },
+          "title": {
+            "type": "string",
+            "example": "To Do"
+          },
+          "position": {
+            "type": "integer",
+            "example": 1000
+          },
+          "wip_limit": {
+            "type": "integer",
+            "nullable": true,
+            "example": null
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Ticket"
+            }
+          }
+        }
+      },
+      "Ticket": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "ticket_number": {
+            "type": "string",
+            "example": "#000001"
+          },
+          "title": {
+            "type": "string",
+            "example": "Implement user authentication"
+          },
+          "description": {
+            "type": "string",
+            "example": "Add JWT-based authentication system"
+          },
+          "column_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "fc63a959-9445-45ae-b036-c222a2baa62a"
+          },
+          "position": {
+            "type": "integer",
+            "example": 1000
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "example": "high"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2025-09-10T00:00:00Z"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["open", "in_progress", "review", "completed"],
+            "example": "open"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "assignees": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketAssignee"
+            }
+          },
+          "labels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TicketLabel"
+            }
+          },
+          "checklists": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Checklist"
+            }
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "196ec239-6f96-4a33-80f3-1379f60bfc37"
+          },
+          "full_name": {
+            "type": "string",
+            "example": "Nguyen Van A"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "16cc3f16-c767-4728-a45e-a1b3950448bb"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "196ec239-6f96-4a33-80f3-1379f60bfc37"
+          },
+          "board_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["owner", "member"],
+            "example": "member"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "Label": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "l1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "board_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+          },
+          "title": {
+            "type": "string",
+            "example": "Bug"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "TicketAssignee": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "ta1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "member_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "16cc3f16-c767-4728-a45e-a1b3950448bb"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "TicketLabel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "tl1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "label_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "l1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "Checklist": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "cl1b2c3d-e5f6-7890-abcd-ef1234567890"
+          },
+          "ticket_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          },
+          "title": {
+            "type": "string",
+            "example": "Review code changes"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "completed"],
+            "example": "pending"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-09-05T03:53:34.694105+07:00"
+          }
+        }
+      },
+      "APIResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "Response data object"
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully"
+          },
+          "status": {
+            "type": "integer",
+            "example": 200
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "message": {
+            "type": "string",
+            "example": "Required field is missing"
+          },
+          "status": {
+            "type": "integer",
+            "example": 400
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/boards": {
+      "post": {
+        "tags": ["Boards"],
+        "summary": "Create a new board",
+        "description": "Creates a new kanban board with the authenticated user as owner and first member",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "fullname"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Project Kanban"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Board for managing sprint tasks"
+                  },
+                  "fullname": {
+                    "type": "string",
+                    "example": "Nguyen Van A"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Board created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Board"
+                        },
+                        "message": {
+                          "example": "Board created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Boards"],
+        "summary": "Get user's boards",
+        "description": "Retrieves all boards where the authenticated user is a member",
+        "responses": {
+          "200": {
+            "description": "Boards retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Board"
+                          }
+                        },
+                        "message": {
+                          "example": "Boards retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{id}": {
+      "get": {
+        "tags": ["Boards"],
+        "summary": "Get board details",
+        "description": "Retrieves board details with columns, tickets, members, and labels",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Board retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "columns": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Column"
+                              }
+                            },
+                            "members": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Member"
+                              }
+                            },
+                            "labels": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Label"
+                              }
+                            }
+                          }
+                        },
+                        "message": {
+                          "example": "Board retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Boards"],
+        "summary": "Update board",
+        "description": "Updates board title and/or description",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Updated Project Kanban"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Updated description"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Board updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Board"
+                        },
+                        "message": {
+                          "example": "Board updated successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Boards"],
+        "summary": "Delete board",
+        "description": "Permanently deletes a board and all its data",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Board deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "null"
+                        },
+                        "message": {
+                          "example": "Board deleted successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{id}/archive": {
+      "patch": {
+        "tags": ["Boards"],
+        "summary": "Archive/Unarchive board",
+        "description": "Toggles the archived status of a board",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Board archived/unarchived successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Board"
+                        },
+                        "message": {
+                          "example": "Board archived successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{id}/search": {
+      "get": {
+        "tags": ["Boards"],
+        "summary": "Search tickets in board",
+        "description": "Search for tickets by title within a specific board",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "authentication"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "columns": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Column"
+                              }
+                            }
+                          }
+                        },
+                        "message": {
+                          "example": "Search results retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/boards/{id}/filter": {
+      "get": {
+        "tags": ["Boards"],
+        "summary": "Filter tickets in board",
+        "description": "Filter tickets by assignee, label, or status within a specific board",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assignee",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by member ID"
+          },
+          {
+            "name": "label",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by label ID"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["open", "in_progress", "review", "completed"]
+            },
+            "description": "Filter by ticket status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filter results retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "object",
+                          "properties": {
+                            "columns": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/Column"
+                              }
+                            }
+                          }
+                        },
+                        "message": {
+                          "example": "Filter results retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/columns": {
+      "post": {
+        "tags": ["Columns"],
+        "summary": "Create a new column",
+        "description": "Creates a new column in a board",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["board_id", "title"],
+                "properties": {
+                  "board_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "To Do"
+                  },
+                  "wip_limit": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Column created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Column"
+                        },
+                        "message": {
+                          "example": "Column created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/columns/{id}": {
+      "get": {
+        "tags": ["Columns"],
+        "summary": "Get column details",
+        "description": "Retrieves column details with all tickets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Column retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Column"
+                        },
+                        "message": {
+                          "example": "Column retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Columns"],
+        "summary": "Update column",
+        "description": "Updates column title and/or WIP limit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "In Progress"
+                  },
+                  "wip_limit": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Column updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Column"
+                        },
+                        "message": {
+                          "example": "Column updated successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Columns"],
+        "summary": "Delete column",
+        "description": "Deletes a column and all its tickets",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Column deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "null"
+                        },
+                        "message": {
+                          "example": "Column deleted successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/columns/{id}/reorder": {
+      "patch": {
+        "tags": ["Columns"],
+        "summary": "Reorder column",
+        "description": "Changes the position of a column within the board using fractional positioning",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["position"],
+                "properties": {
+                  "position": {
+                    "type": "string",
+                    "enum": ["first", "last", "after:{column_id}", "before:{column_id}"],
+                    "description": "Position specification. Use 'first', 'last', 'after:uuid', or 'before:uuid'",
+                    "example": "after:fc63a959-9445-45ae-b036-c222a2baa62a"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Column reordered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Column"
+                        },
+                        "message": {
+                          "example": "Column reordered successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets": {
+      "post": {
+        "tags": ["Tickets"],
+        "summary": "Create a new ticket",
+        "description": "Creates a new ticket in a specific column",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["column_id", "title"],
+                "properties": {
+                  "column_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "fc63a959-9445-45ae-b036-c222a2baa62a"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Implement user authentication"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Ticket created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Ticket"
+                        },
+                        "message": {
+                          "example": "Ticket created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{id}": {
+      "get": {
+        "tags": ["Tickets"],
+        "summary": "Get ticket details",
+        "description": "Retrieves ticket details with assignees, labels, and checklists",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Ticket"
+                        },
+                        "message": {
+                          "example": "Ticket retrieved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Tickets"],
+        "summary": "Update ticket",
+        "description": "Updates ticket properties like title, description, priority, due date, or status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "example": "Updated ticket title"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Updated ticket description with markdown support"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["low", "medium", "high", "critical"],
+                    "example": "high"
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2025-09-10T00:00:00Z"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["open", "in_progress", "review", "completed"],
+                    "example": "in_progress"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Ticket"
+                        },
+                        "message": {
+                          "example": "Ticket updated successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Tickets"],
+        "summary": "Delete ticket",
+        "description": "Permanently deletes a ticket and all its related data",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "null"
+                        },
+                        "message": {
+                          "example": "Ticket deleted successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tickets/{id}/move": {
+      "patch": {
+        "tags": ["Tickets"],
+        "summary": "Move ticket",
+        "description": "Moves a ticket to a different column and/or position",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["column_id", "position"],
+                "properties": {
+                  "column_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "fc63a959-9445-45ae-b036-c222a2baa62a"
+                  },
+                  "position": {
+                    "type": "string",
+                    "enum": ["first", "last", "after:{ticket_id}", "before:{ticket_id}"],
+                    "description": "Position specification. Use 'first', 'last', 'after:uuid', or 'before:uuid'",
+                    "example": "first"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ticket moved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Ticket"
+                        },
+                        "message": {
+                          "example": "Ticket moved successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Create a new user",
+        "description": "Creates a new user in the system",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "fullname"],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "196ec239-6f96-4a33-80f3-1379f60bfc37"
+                  },
+                  "fullname": {
+                    "type": "string",
+                    "example": "Nguyen Van A"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/User"
+                        },
+                        "message": {
+                          "example": "User created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/members": {
+      "post": {
+        "tags": ["Members"],
+        "summary": "Add member to board",
+        "description": "Adds an existing user as a member to a board",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "board_id"],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "196ec239-6f96-4a33-80f3-1379f60bfc37"
+                  },
+                  "board_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Member"
+                        },
+                        "message": {
+                          "example": "Member added to board successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/labels": {
+      "post": {
+        "tags": ["Labels"],
+        "summary": "Create a new label",
+        "description": "Creates a new label for a board",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["board_id", "title"],
+                "properties": {
+                  "board_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "b5c66cd3-ddb0-49f9-ad8f-29738c239e60"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Bug"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Label created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Label"
+                        },
+                        "message": {
+                          "example": "Label created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/labels/assign": {
+      "post": {
+        "tags": ["Labels"],
+        "summary": "Assign label to ticket",
+        "description": "Assigns an existing label to a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["label_id", "ticket_id"],
+                "properties": {
+                  "label_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "l1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "ticket_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Label assigned to ticket successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/TicketLabel"
+                        },
+                        "message": {
+                          "example": "Label assigned to ticket successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assignees": {
+      "post": {
+        "tags": ["Assignees"],
+        "summary": "Assign member to ticket",
+        "description": "Assigns a board member to a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ticket_id", "member_id"],
+                "properties": {
+                  "ticket_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "member_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "16cc3f16-c767-4728-a45e-a1b3950448bb"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Member assigned to ticket successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/TicketAssignee"
+                        },
+                        "message": {
+                          "example": "Member assigned to ticket successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Assignees"],
+        "summary": "Remove assignee from ticket",
+        "description": "Removes a member assignment from a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ticket_id", "member_id"],
+                "properties": {
+                  "ticket_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "member_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "16cc3f16-c767-4728-a45e-a1b3950448bb"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Assignee removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "null"
+                        },
+                        "message": {
+                          "example": "Assignee removed successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checklists": {
+      "post": {
+        "tags": ["Checklists"],
+        "summary": "Create checklist item",
+        "description": "Creates a new checklist item for a ticket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["ticket_id", "title"],
+                "properties": {
+                  "ticket_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "title": {
+                    "type": "string",
+                    "example": "Review code changes"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checklist item created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Checklist"
+                        },
+                        "message": {
+                          "example": "Checklist item created successfully"
+                        },
+                        "status": {
+                          "example": 201
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/checklists/{id}": {
+      "patch": {
+        "tags": ["Checklists"],
+        "summary": "Update checklist item",
+        "description": "Updates the status of a checklist item",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "completed"],
+                    "example": "completed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checklist item updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "$ref": "#/components/schemas/Checklist"
+                        },
+                        "message": {
+                          "example": "Checklist item updated successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Checklists"],
+        "summary": "Delete checklist item",
+        "description": "Deletes a checklist item",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checklist item deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {"$ref": "#/components/schemas/APIResponse"},
+                    {
+                      "properties": {
+                        "data": {
+                          "type": "null"
+                        },
+                        "message": {
+                          "example": "Checklist item deleted successfully"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Boards",
+      "description": "Board management operations"
+    },
+    {
+      "name": "Columns",
+      "description": "Column management operations"
+    },
+    {
+      "name": "Tickets",
+      "description": "Ticket management operations"
+    },
+    {
+      "name": "Users",
+      "description": "User management operations"
+    },
+    {
+      "name": "Members",
+      "description": "Board membership operations"
+    },
+    {
+      "name": "Labels",
+      "description": "Label management operations"
+    },
+    {
+      "name": "Assignees",
+      "description": "Ticket assignment operations"
+    },
+    {
+      "name": "Checklists",
+      "description": "Checklist management operations"
+    }
+  ]
+}

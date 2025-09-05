@@ -9,6 +9,9 @@ type Member struct {
 	Role      string    `gorm:"type:varchar(50);default:'member'" json:"role"`
 	CreatedAt time.Time `gorm:"type:timestamp with time zone;default:now()" json:"created_at"`
 	UpdatedAt time.Time `gorm:"type:timestamp with time zone;default:now()" json:"updated_at"`
+
+	// Relationship to get user details
+	User User `gorm:"foreignKey:UserID" json:"user"`
 }
 
 func (Member) TableName() string {
