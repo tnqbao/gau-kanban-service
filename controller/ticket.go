@@ -482,8 +482,8 @@ func (ctrl *Controller) MoveTicket(c *gin.Context) {
 		}
 	}
 
-	// Check for self-reference in position
-	if req.Position == "after:"+ticketID || req.Position == "before:"+ticketID {
+	// Check for self-reference in position (only when staying in the same column)
+	if ticket.ColumnID == req.ColumnID && (req.Position == "after:"+ticketID || req.Position == "before:"+ticketID) {
 		ctrl.Provider.LoggerProvider.ErrorWithContextf(ctx, nil, "[Move Ticket] Cannot move ticket relative to itself")
 		utils.JSON400(c, "Cannot move ticket relative to itself")
 		return
