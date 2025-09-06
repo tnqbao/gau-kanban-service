@@ -1,4 +1,4 @@
-t # Gau Kanban Service
+# Gau Kanban Service
 
 ## Mô tả dự án
 
@@ -11,7 +11,7 @@ Gau Kanban Service là một RESTful API service được xây dựng bằng Go 
 - Sắp xếp lại vị trí columns
 - Quản lý thứ tự hiển thị
 
-### 🎫 Quản lý Tickets
+
 - Tạo tickets với ticket number tự động (TASK-XXXX format)
 - CRUD operations cho tickets
 - Di chuyển tickets giữa các columns với position management thông minh
@@ -33,6 +33,14 @@ Gau Kanban Service là một RESTful API service được xây dựng bằng Go 
 - Sắp xếp thứ tự checklist items
 - Tích hợp trong ticket create/update operations
 - CRUD operations riêng biệt cho từng checklist item
+
+=======
+- Tạo tickets với ticket number tự động (TASK-XXXX)
+- CRUD operations cho tickets
+- Di chuyển tickets giữa các columns
+- Drag & drop với position management thông minh
+- Tự động sắp xếp vị trí khi tạo ticket mới (luôn ở cuối column)
+- Hỗ trợ due date và priority
 
 ### 🏷️ Quản lý Labels
 - Tạo và quản lý labels với màu sắc
@@ -79,7 +87,6 @@ gau-kanban-service/
 ├── migrations/           # Database migrations
 ├── utils/                # Utility functions
 └── deploy/               # Kubernetes deployment configs
-```
 
 ## API Endpoints
 
@@ -148,84 +155,3 @@ gau-kanban-service/
 # Clone repository
 git clone <repository-url>
 cd gau-kanban-service
-
-# Install dependencies
-go mod tidy
-
-# Setup database
-createdb kanban_db
-
-# Run migrations
-migrate -path migrations -database "postgres://username:password@localhost/kanban_db?sslmode=disable" up
-
-# Run the application
-go run main.go
-```
-
-### Docker Development
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Run migrations
-docker-compose exec app migrate -path migrations -database $DATABASE_URL up
-```
-
-### Kubernetes Deployment
-```bash
-# Deploy to staging
-cd deploy/k8s/staging
-./apply.sh
-
-# Deploy to production
-cd deploy/k8s/production
-./apply.sh
-```
-
-## Database Schema
-
-### Tickets Table
-- id (UUID, Primary Key)
-- ticket_no (Text, Unique) - Format: TASK-XXXX
-- column_id (UUID, Foreign Key)
-- title (Text)
-- description (Text)
-- due_date (Date)
-- priority (Text)
-- position (Integer) - Vị trí trong column
-- created_at, updated_at (Timestamp)
-
-### Task Assignments Table
-- id (UUID, Primary Key)
-- ticket_id (UUID, Foreign Key)
-- user_id (UUID)
-- user_full_name (Text)
-- assigned_at (Timestamp)
-
-### Checklists Table
-- id (UUID, Primary Key)
-- ticket_id (UUID, Foreign Key)
-- title (Text)
-- completed (Boolean)
-- position (Integer) - Vị trí trong ticket
-- created_at, updated_at (Timestamp)
-
-## Environment Variables
-
-```bash
-DATABASE_URL=postgres://username:password@localhost/kanban_db?sslmode=disable
-PORT=8080
-GIN_MODE=release # for production
-```
-
-## Contributing
-
-1. Fork repository
-2. Tạo feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Tạo Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
