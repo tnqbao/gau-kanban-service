@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/tnqbao/gau-kanban-service/controller"
 	"github.com/tnqbao/gau-kanban-service/infra"
 	"github.com/tnqbao/gau-kanban-service/repository"
-	"log"
 
 	"github.com/joho/godotenv"
 	"github.com/tnqbao/gau-kanban-service/config"
@@ -36,10 +37,13 @@ func main() {
 	if ctrl == nil {
 		log.Fatal("Failed to initialize controller")
 	}
-	
-	router := routes.SetupRouter(ctrl)
+
+	router := routes.SetupRoutes(ctrl)
 	if router == nil {
 		log.Fatal("Failed to set up router")
 	}
-	router.Run(":8080")
+	err = router.Run(":8080")
+	if err != nil {
+		return
+	}
 }

@@ -13,6 +13,7 @@ WORKDIR /gau_kanban
 RUN apk add --no-cache \
     bash \
     ca-certificates \
+    tzdata \
     curl \
     && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.3/migrate.linux-amd64.tar.gz \
     | tar xvz -C /tmp \
@@ -21,6 +22,7 @@ RUN apk add --no-cache \
 
 COPY --from=builder /gau_kanban/gau-kanban-service.bin .
 COPY migrations ./migrations
+COPY config ./config
 COPY entrypoint.sh .
 
 RUN chmod +x entrypoint.sh
